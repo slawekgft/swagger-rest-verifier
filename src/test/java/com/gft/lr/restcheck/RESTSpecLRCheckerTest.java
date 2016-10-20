@@ -2,9 +2,7 @@ package com.gft.lr.restcheck;
 
 import com.gft.lr.restcheck.ifc.CommandIssuer;
 import com.gft.lr.restcheck.ifc.RESTClient;
-import com.gft.lt.test.TestUtil;
 import org.apache.commons.httpclient.HttpMethod;
-import org.fest.assertions.Assertions;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.slf4j.Logger;
@@ -18,7 +16,6 @@ import static org.fest.assertions.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.verify;
 
 /**
  * Created by Sławomir Węgrzyn, GFT on 19/10/16.

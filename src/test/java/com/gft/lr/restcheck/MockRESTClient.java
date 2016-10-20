@@ -7,7 +7,6 @@ import org.apache.commons.httpclient.HttpMethod;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 
 /**
  * Created by Sławomir Węgrzyn, GFT on 20/10/16.
