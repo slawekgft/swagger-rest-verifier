@@ -1,4 +1,4 @@
-package com.gft.lr;
+package com.gft.lr.restcheck;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
  */
 public class RESTsNotCompatibleException extends Exception {
 
-    private final Collection<RESTSpecLRControllerTest.SwaggerResource> problematicSpecs;
+    private final Collection<RESTSpecLRChecker.SwaggerResource> problematicSpecs;
 
-    public RESTsNotCompatibleException(Collection<RESTSpecLRControllerTest.SwaggerResource> problematicSpecs) {
+    public RESTsNotCompatibleException(Collection<RESTSpecLRChecker.SwaggerResource> problematicSpecs) {
         super("Following REST specs are not backward compatible: \n");
         if(problematicSpecs == null) {
             throw new NullPointerException();
@@ -21,7 +21,7 @@ public class RESTsNotCompatibleException extends Exception {
         this.problematicSpecs = problematicSpecs;
     }
 
-    public Collection<RESTSpecLRControllerTest.SwaggerResource> getProblematicSpecs() {
+    public Collection<RESTSpecLRChecker.SwaggerResource> getProblematicSpecs() {
         return Collections.unmodifiableCollection(problematicSpecs);
     }
 
