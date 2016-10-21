@@ -4,8 +4,11 @@ This project checks if YAML specs in the Facade project are coherent with what g
 REST services.
 It simply checks if instance REST service is backward compatible with YAML files at provided location.
 Location is injected as in this example (use `lombard.risk.rest.spec.path` env var):
-> `java -cp ... com.gft.lr.CheckRestSpecApplication -Dlombard.risk.rest.spec.path=/src/LR/facade/lr-facade`
+> `./checkFacadeRESTs.sh -s git@git.gft.com:lr/facade-contracts.git -u http://localhost:9000/api`
+or
+> './checkFacadeRESTs.sh -s ~/IdeaProjects/LR/f-c/ -u http://localhost:9000/api'
 
-Currently Facade instance should be available at `http://localhost:9000/`.
+Add `-f login` if you want to check only `login` api. All files must have proper resource path configred!
+See examples in Facade routes file.
 
-All interfaces described by found *.yml files will be processed. By default *.yml files are located in `/public/interfacespec`.
+All interfaces described by found *.yml, *.yaml files will be processed.
