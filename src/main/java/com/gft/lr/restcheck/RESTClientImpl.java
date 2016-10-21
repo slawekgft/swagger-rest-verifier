@@ -13,11 +13,11 @@ import java.io.IOException;
  */
 public class RESTClientImpl implements RESTClient {
 
-    private HttpClient httpClient = new HttpClient();
-
     @Override
     public int executeMethod(final HttpMethod method) throws IOException, HttpException {
-        return httpClient.executeMethod(method);
+        HttpClient httpClient = new HttpClient();
+        int status = httpClient.executeMethod(method);
+        return status;
     }
 
     @Override

@@ -53,7 +53,7 @@ public class MockCommandIssuer implements CommandIssuer {
 
     @Override
     public Process exec(String temporaryJson, String sourceFilePath) throws IOException {
-        log.debug("temporaryJson = '" + temporaryJson);
+        log.debug("temporaryJson = '" + temporaryJson + "', sourceFilePath = '" + sourceFilePath + "'");
         execs.add("temporaryJson = '" + temporaryJson + "', sourceFilePath = '" + sourceFilePath + "'");
         log.debug("<<");
 

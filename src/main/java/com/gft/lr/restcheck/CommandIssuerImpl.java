@@ -11,7 +11,7 @@ import java.io.IOException;
  */
 public class CommandIssuerImpl implements CommandIssuer {
 
-    public static final Logger log = LoggerFactory.getLogger(RESTSpecLRChecker.class);
+    public static final Logger log = LoggerFactory.getLogger(CommandIssuerImpl.class);
 
     public static final String SWAGGER_DIFF = "swagger-diff --incompatibilities {old} {new}";
 

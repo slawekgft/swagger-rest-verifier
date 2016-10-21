@@ -55,6 +55,11 @@ public class RESTSpecLRCheckerTest {
         assertThat(processedFilesPaths).contains("/spec1_3.json");
         assertThat(processedFilesPaths).contains("/spec2_1.json");
         assertThat(processedFilesPaths).contains("/spec0_1.json");
+        assertThat(processedFilesPaths).contains("/subApi1/spec1_1.yaml");
+        assertThat(processedFilesPaths).contains("/subApi1/spec1_2.yml");
+        assertThat(processedFilesPaths).contains("/subApi1/spec1_3.yml");
+        assertThat(processedFilesPaths).contains("/subApi2/spec2_1.yml");
+        assertThat(processedFilesPaths).contains("/spec0_1.yml");
     }
 
     @Test

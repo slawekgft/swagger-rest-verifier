@@ -19,8 +19,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.commons.lang3.StringUtils.strip;
+
 /**
- * @author: Słaowomir Węgrzyn
+ * @author: Sławomir Węgrzyn
  * @date: 17/10/2016
  */
 public class RESTSpecLRChecker {
@@ -55,7 +57,7 @@ public class RESTSpecLRChecker {
         final Collection<SwaggerResource> swaggerResources = prepareJSons(filterSwaggers(prepareSwaggers()));
         final Collection<SwaggerResource> problematicJSons = new ArrayList<>();
 
-        swaggerResources.parallelStream().forEach(swaggerResource -> {
+        swaggerResources.stream().forEach(swaggerResource -> {
             File temporaryJson = null;
             try {
                 temporaryJson = storeTempFile(prepareTempDirectory(swaggerResource), swaggerResource);
@@ -118,7 +120,7 @@ public class RESTSpecLRChecker {
 
     private String localPathBasedOnSystemProperty(SwaggerResource swaggerResource) {
         String fullPath = getRESTSpecsRelativePath();
-        return fullPath + swaggerResource.getFileName();
+        return fullPath + swaggerResource.getFileNamePrefix() + swaggerResource.getFileName();
     }
 
     private String getRESTSpecsFullPath() {
@@ -159,6 +161,8 @@ public class RESTSpecLRChecker {
         Stream<Path> pathStream = Files.walk(Paths.get(getRESTSpecsRelativePath()), SEARCH_DEPTH_IS_2);
         return pathStream
                 .filter(path -> Files.isRegularFile(path))
+                .filter(path -> path.getFileName().toString().toLowerCase().contains(".yml")
+                             || path.getFileName().toString().toLowerCase().contains(".yaml"))
                 .map(path -> createSwaggerResource(path))
                 .collect(Collectors.toList());
     }
@@ -166,8 +170,8 @@ public class RESTSpecLRChecker {
     private SwaggerResource createSwaggerResource(Path path) {
         final String optionalPrefix;
         {
-            String prefixTmp = StringUtils
-                    .strip(path.getParent().toFile().getAbsolutePath().replace(
+            String prefixTmp =
+                    strip(path.getParent().toFile().getAbsolutePath().replace(
                             getRESTSpecsFullPath(), ""), File.separator)
                     .replaceAll(File.separator, URL_SEPARATOR.toString());
             if (StringUtils.isNotBlank(prefixTmp)) {
@@ -175,7 +179,10 @@ public class RESTSpecLRChecker {
             }
             optionalPrefix = prefixTmp;
         }
-        return new SwaggerResource(path.getFileName().toString(), getApiUrl(path.getFileName().toString(), optionalPrefix));
+        return new SwaggerResource(
+                path.getFileName().toString(),
+                optionalPrefix,
+                getApiUrl(path.getFileName().toString(), optionalPrefix));
     }
 
     private String getApiUrl(String baseFileName, String prefix) {
@@ -184,18 +191,21 @@ public class RESTSpecLRChecker {
 
     final static class SwaggerResource {
         private String fileName;
+        private String fileNamePrefix;
         private String source;
         private String url;
 
         SwaggerResource(String source, SwaggerResource swaggerResource) {
             this.source = source;
             this.fileName = swaggerResource.getFileName();
+            this.fileNamePrefix = swaggerResource.getFileNamePrefix();
             this.url = swaggerResource.getUrl();
         }
 
-        SwaggerResource(String fileName, String url) {
+        SwaggerResource(String fileName, String fileNamePrefix, String url) {
             this.fileName = fileName;
             this.url = url;
+            this.fileNamePrefix = fileNamePrefix;
         }
 
         public String getFileName() {
@@ -208,6 +218,10 @@ public class RESTSpecLRChecker {
 
         public String getUrl() {
             return url;
+        }
+
+        public String getFileNamePrefix() {
+            return fileNamePrefix;
         }
     }
 
