@@ -3,6 +3,7 @@ package com.gft.lr.restcheck;
 import com.gft.lr.restcheck.ifc.CommandExecutor;
 import com.gft.lr.restcheck.ifc.RESTClient;
 import org.apache.commons.httpclient.HttpMethod;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.slf4j.Logger;
@@ -31,7 +32,6 @@ public class RESTSpecLRValidatorTest {
     @Test
     public void checkIfRestIsBackwardCompatibleAllSpecs() throws Exception {
         // given
-        setProps();
         CommandExecutor cmdIss = new MockCommandExecutor();
         HttpMethod getHTTPMethod = BDDMockito.mock(HttpMethod.class);
         MockRESTClient restClient = new MockRESTClient(RESTSpecLRValidator.HTTP_OK, getHTTPMethod);
@@ -65,7 +65,6 @@ public class RESTSpecLRValidatorTest {
     @Test
     public void checkIfRestIsBackwardCompatibleFilteredSpecs() throws Exception {
         // given
-        setProps();
         CommandExecutor cmdIss = new MockCommandExecutor();
         RESTClient restClient = BDDMockito.mock(RESTClient.class);
         HttpMethod getHTTPMethod = BDDMockito.mock(HttpMethod.class);
@@ -87,7 +86,8 @@ public class RESTSpecLRValidatorTest {
         assertThat(processedFilesPaths).contains("/spec2_1.json");
     }
 
-    private void setProps() {
+    @Before
+    public void setProps() {
         System.setProperty(RESTSpecLRValidator.ENV_PREF + "rest.spec.path", "src/test/resources");
         System.setProperty(getUrlPropName(), "http://localhost:9000/rest/");
     }
