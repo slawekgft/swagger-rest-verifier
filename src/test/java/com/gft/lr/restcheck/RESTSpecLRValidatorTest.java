@@ -20,9 +20,9 @@ import static org.mockito.Matchers.anyString;
 /**
  * Created by Sławomir Węgrzyn, GFT on 19/10/16.
  */
-public class RESTSpecLRCheckerTest {
+public class RESTSpecLRValidatorTest {
 
-    public static final Logger log = LoggerFactory.getLogger(RESTSpecLRCheckerTest.class);
+    public static final Logger log = LoggerFactory.getLogger(RESTSpecLRValidatorTest.class);
 
     public static final String FILTER_URL = "_1";
     public static final int SPECS_THAT_MATCH_COUNT = 3;
@@ -34,13 +34,13 @@ public class RESTSpecLRCheckerTest {
         setProps();
         CommandExecutor cmdIss = new MockCommandExecutor();
         HttpMethod getHTTPMethod = BDDMockito.mock(HttpMethod.class);
-        MockRESTClient restClient = new MockRESTClient(RESTSpecLRChecker.HTTP_OK, getHTTPMethod);
-        RESTSpecLRChecker restSpecLRChecker = new RESTSpecLRChecker(cmdIss, restClient);
+        MockRESTClient restClient = new MockRESTClient(RESTSpecLRValidator.HTTP_OK, getHTTPMethod);
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient);
 
         given(getHTTPMethod.getResponseBodyAsString()).willReturn("swagger: 2.0");
 
         // when
-        restSpecLRChecker.checkIfRestIsBackwardCompatible();
+        restSpecLRValidator.checkIfRestIsBackwardCompatible();
 
         // then
         final Collection<String> execs = ((MockCommandExecutor) cmdIss).getExecs();
@@ -69,14 +69,14 @@ public class RESTSpecLRCheckerTest {
         CommandExecutor cmdIss = new MockCommandExecutor();
         RESTClient restClient = BDDMockito.mock(RESTClient.class);
         HttpMethod getHTTPMethod = BDDMockito.mock(HttpMethod.class);
-        RESTSpecLRChecker restSpecLRChecker = new RESTSpecLRChecker(cmdIss, restClient, FILTER_URL);
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, FILTER_URL);
 
-        given(restClient.executeMethod(any(HttpMethod.class))).willReturn(RESTSpecLRChecker.HTTP_OK);
+        given(restClient.executeMethod(any(HttpMethod.class))).willReturn(RESTSpecLRValidator.HTTP_OK);
         given(restClient.createGetMethod(anyString())).willReturn(getHTTPMethod);
         given(getHTTPMethod.getResponseBodyAsString()).willReturn("swagger: 2.0");
 
         // when
-        restSpecLRChecker.checkIfRestIsBackwardCompatible();
+        restSpecLRValidator.checkIfRestIsBackwardCompatible();
 
         // then
         final Collection<String> execs = ((MockCommandExecutor) cmdIss).getExecs();
@@ -88,12 +88,12 @@ public class RESTSpecLRCheckerTest {
     }
 
     private void setProps() {
-        System.setProperty(RESTSpecLRChecker.ENV_PREF + "rest.spec.path", "src/test/resources");
+        System.setProperty(RESTSpecLRValidator.ENV_PREF + "rest.spec.path", "src/test/resources");
         System.setProperty(getUrlPropName(), "http://localhost:9000/rest/");
     }
 
     private String getUrlPropName() {
-        return RESTSpecLRChecker.ENV_PREF + "url";
+        return RESTSpecLRValidator.ENV_PREF + "url";
     }
 
 }

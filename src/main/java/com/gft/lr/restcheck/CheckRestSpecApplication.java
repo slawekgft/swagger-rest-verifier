@@ -12,7 +12,7 @@ public class CheckRestSpecApplication
     public static void main( String[] args ) {
         try {
             String filterUrl = args.length > 0 ? args[0] : "";
-            new RESTSpecLRChecker(new CommandExecutorImpl(), new RESTClientImpl(), filterUrl).checkIfRestIsBackwardCompatible();
+            new RESTSpecLRValidator(new CommandExecutorImpl(), new RESTClientImpl(), filterUrl).checkIfRestIsBackwardCompatible();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         } catch (RESTsNotCompatibleException e) {

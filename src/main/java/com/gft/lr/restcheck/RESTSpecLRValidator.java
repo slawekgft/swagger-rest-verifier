@@ -25,9 +25,9 @@ import static org.apache.commons.lang3.StringUtils.strip;
  * @author: Sławomir Węgrzyn
  * @date: 17/10/2016
  */
-public class RESTSpecLRChecker {
+public class RESTSpecLRValidator {
 
-    public static final Logger log = LoggerFactory.getLogger(RESTSpecLRChecker.class);
+    public static final Logger log = LoggerFactory.getLogger(RESTSpecLRValidator.class);
 
     public static final String ENV_PREF = "lr.restwatch.";
     public static final String LOMBARD_RISK_REST_SPEC_PATH_ENV = System.getProperty(ENV_PREF + "rest.spec.path");
@@ -43,12 +43,12 @@ public class RESTSpecLRChecker {
     private String filterUrl;
     private RESTClient restClient;
 
-    public RESTSpecLRChecker(CommandExecutor commandIssuer, RESTClient restClient) {
+    public RESTSpecLRValidator(CommandExecutor commandIssuer, RESTClient restClient) {
         this.commandIssuer = commandIssuer;
         this.restClient = restClient;
     }
 
-    public RESTSpecLRChecker(CommandExecutor commandIssuer, RESTClient restClient, String filterUrl) {
+    public RESTSpecLRValidator(CommandExecutor commandIssuer, RESTClient restClient, String filterUrl) {
         this(commandIssuer, restClient);
         this.filterUrl = filterUrl;
     }
@@ -187,42 +187,6 @@ public class RESTSpecLRChecker {
 
     private String getApiUrl(String baseFileName, String prefix) {
         return SWAGGER_API_DOCS_URL_ENV.replaceAll("\\{filename\\}", prefix + noFormatName(baseFileName));
-    }
-
-    final static class SwaggerResource {
-        private String fileName;
-        private String fileNamePrefix;
-        private String source;
-        private String url;
-
-        SwaggerResource(String source, SwaggerResource swaggerResource) {
-            this.source = source;
-            this.fileName = swaggerResource.getFileName();
-            this.fileNamePrefix = swaggerResource.getFileNamePrefix();
-            this.url = swaggerResource.getUrl();
-        }
-
-        SwaggerResource(String fileName, String fileNamePrefix, String url) {
-            this.fileName = fileName;
-            this.url = url;
-            this.fileNamePrefix = fileNamePrefix;
-        }
-
-        public String getFileName() {
-            return fileName;
-        }
-
-        public String getSource() {
-            return source;
-        }
-
-        public String getUrl() {
-            return url;
-        }
-
-        public String getFileNamePrefix() {
-            return fileNamePrefix;
-        }
     }
 
     private Collection<SwaggerResource> prepareJSons(Collection<SwaggerResource> swaggers) {

@@ -11,24 +11,24 @@ import java.util.stream.Collectors;
  */
 public class RESTsNotCompatibleException extends Exception {
 
-    private final Collection<RESTSpecLRChecker.SwaggerResource> problematicSpecs;
+    private final Collection<SwaggerResource> problematicSpecs;
 
-    public RESTsNotCompatibleException(Collection<RESTSpecLRChecker.SwaggerResource> problematicSpecs) {
+    public RESTsNotCompatibleException(Collection<SwaggerResource> problematicSpecs) {
         super("Following REST specs are not backward compatible: \n");
-        if(problematicSpecs == null) {
+        if (problematicSpecs == null) {
             throw new NullPointerException();
         }
         this.problematicSpecs = problematicSpecs;
     }
 
-    public Collection<RESTSpecLRChecker.SwaggerResource> getProblematicSpecs() {
+    public Collection<SwaggerResource> getProblematicSpecs() {
         return Collections.unmodifiableCollection(problematicSpecs);
     }
 
     public String getMessage() {
         return StringUtils.defaultString(super.getMessage())
                 + getProblematicSpecs().stream()
-                    .map(swaggerResource -> swaggerResource.getUrl())
-                    .collect(Collectors.joining(",\n"));
+                .map(swaggerResource -> swaggerResource.getUrl())
+                .collect(Collectors.joining(",\n"));
     }
 }
