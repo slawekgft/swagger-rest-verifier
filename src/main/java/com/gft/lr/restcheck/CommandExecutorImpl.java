@@ -1,6 +1,6 @@
 package com.gft.lr.restcheck;
 
-import com.gft.lr.restcheck.ifc.CommandIssuer;
+import com.gft.lr.restcheck.ifc.CommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,9 +9,9 @@ import java.io.IOException;
 /**
  * Created by Sławomir Węgrzyn, GFT on 19/10/16.
  */
-public class CommandIssuerImpl implements CommandIssuer {
+public class CommandExecutorImpl implements CommandExecutor {
 
-    public static final Logger log = LoggerFactory.getLogger(CommandIssuerImpl.class);
+    public static final Logger log = LoggerFactory.getLogger(CommandExecutorImpl.class);
 
     public static final String SWAGGER_DIFF = "swagger-diff --incompatibilities {old} {new}";
 

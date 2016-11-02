@@ -1,6 +1,6 @@
 package com.gft.lr.restcheck;
 
-import com.gft.lr.restcheck.ifc.CommandIssuer;
+import com.gft.lr.restcheck.ifc.CommandExecutor;
 import com.gft.lr.restcheck.ifc.RESTClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.junit.Test;
@@ -32,7 +32,7 @@ public class RESTSpecLRCheckerTest {
     public void checkIfRestIsBackwardCompatibleAllSpecs() throws Exception {
         // given
         setProps();
-        CommandIssuer cmdIss = new MockCommandIssuer();
+        CommandExecutor cmdIss = new MockCommandExecutor();
         HttpMethod getHTTPMethod = BDDMockito.mock(HttpMethod.class);
         MockRESTClient restClient = new MockRESTClient(RESTSpecLRChecker.HTTP_OK, getHTTPMethod);
         RESTSpecLRChecker restSpecLRChecker = new RESTSpecLRChecker(cmdIss, restClient);
@@ -43,7 +43,7 @@ public class RESTSpecLRCheckerTest {
         restSpecLRChecker.checkIfRestIsBackwardCompatible();
 
         // then
-        final Collection<String> execs = ((MockCommandIssuer) cmdIss).getExecs();
+        final Collection<String> execs = ((MockCommandExecutor) cmdIss).getExecs();
         final String producedUrls = restClient.getPassedUrls().stream().collect(Collectors.joining(" "));
         assertThat(execs).hasSize(ALL_SPECS_COUNT);
         assertThat(producedUrls).contains(sysProp(getUrlPropName()) + "spec0_1.json");
@@ -66,7 +66,7 @@ public class RESTSpecLRCheckerTest {
     public void checkIfRestIsBackwardCompatibleFilteredSpecs() throws Exception {
         // given
         setProps();
-        CommandIssuer cmdIss = new MockCommandIssuer();
+        CommandExecutor cmdIss = new MockCommandExecutor();
         RESTClient restClient = BDDMockito.mock(RESTClient.class);
         HttpMethod getHTTPMethod = BDDMockito.mock(HttpMethod.class);
         RESTSpecLRChecker restSpecLRChecker = new RESTSpecLRChecker(cmdIss, restClient, FILTER_URL);
@@ -79,7 +79,7 @@ public class RESTSpecLRCheckerTest {
         restSpecLRChecker.checkIfRestIsBackwardCompatible();
 
         // then
-        final Collection<String> execs = ((MockCommandIssuer) cmdIss).getExecs();
+        final Collection<String> execs = ((MockCommandExecutor) cmdIss).getExecs();
         final String processedFilesPaths = execs.stream().collect(Collectors.joining());
         assertThat(execs).hasSize(SPECS_THAT_MATCH_COUNT);
         assertThat(processedFilesPaths).contains("/spec0_1.json");

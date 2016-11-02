@@ -1,6 +1,6 @@
 package com.gft.lr.restcheck;
 
-import com.gft.lr.restcheck.ifc.CommandIssuer;
+import com.gft.lr.restcheck.ifc.CommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,9 +13,9 @@ import java.util.List;
 /**
  * Created by Sławomir Węgrzyn, GFT on 19/10/16.
  */
-public class MockCommandIssuer implements CommandIssuer {
+public class MockCommandExecutor implements CommandExecutor {
 
-    public static final Logger log = LoggerFactory.getLogger(MockCommandIssuer.class);
+    public static final Logger log = LoggerFactory.getLogger(MockCommandExecutor.class);
     private List<String> execs = Collections.synchronizedList(new ArrayList<>());
 
     class MockProcess extends Process {

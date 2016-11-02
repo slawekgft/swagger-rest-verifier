@@ -1,7 +1,7 @@
 package com.gft.lr.restcheck;
 
 
-import com.gft.lr.restcheck.ifc.CommandIssuer;
+import com.gft.lr.restcheck.ifc.CommandExecutor;
 import com.gft.lr.restcheck.ifc.RESTClient;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.HttpMethod;
@@ -39,16 +39,16 @@ public class RESTSpecLRChecker {
     public static final int SEARCH_DEPTH_IS_2 = 2;
     public static final Character URL_SEPARATOR = '/';
 
-    private CommandIssuer commandIssuer;
+    private CommandExecutor commandIssuer;
     private String filterUrl;
     private RESTClient restClient;
 
-    public RESTSpecLRChecker(CommandIssuer commandIssuer, RESTClient restClient) {
+    public RESTSpecLRChecker(CommandExecutor commandIssuer, RESTClient restClient) {
         this.commandIssuer = commandIssuer;
         this.restClient = restClient;
     }
 
-    public RESTSpecLRChecker(CommandIssuer commandIssuer, RESTClient restClient, String filterUrl) {
+    public RESTSpecLRChecker(CommandExecutor commandIssuer, RESTClient restClient, String filterUrl) {
         this(commandIssuer, restClient);
         this.filterUrl = filterUrl;
     }
