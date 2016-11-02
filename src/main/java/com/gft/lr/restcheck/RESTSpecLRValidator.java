@@ -1,10 +1,10 @@
-package com.gft.lr;
+package com.gft.lr.restcheck;
 
 
+import com.gft.lr.restcheck.ifc.CommandExecutor;
+import com.gft.lr.restcheck.ifc.RESTClient;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,26 +19,45 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.commons.lang3.StringUtils.strip;
+
 /**
- * @author: Słaowomir Węgrzyn
+ * @author: Sławomir Węgrzyn
  * @date: 17/10/2016
  */
-public class RESTSpecLRControllerTest {
+public class RESTSpecLRValidator {
 
-    public static final Logger log = LoggerFactory.getLogger(RESTSpecLRControllerTest.class);
+    public static final Logger log = LoggerFactory.getLogger(RESTSpecLRValidator.class);
 
-    public static final String SWAGGER_API_DOCS_URL = "http://localhost:9000/{filename}.json";
+    public static final String ENV_PREF = "lr.restwatch.";
+    public static final String LOMBARD_RISK_REST_SPEC_PATH_ENV = System.getProperty(ENV_PREF + "rest.spec.path");
+    public static final String SWAGGER_API_DOCS_URL_ENV = System.getProperty(ENV_PREF + "url").trim().replaceFirst("/$", "") + "/{filename}.json";
+
     public static final String UTF_8_CHARSET = "utf-8";
-    public static final String SWAGGER_DIFF = "swagger-diff --incompatibilities {old} {new}";
-    public static final String PUBLIC_INTERFACESPEC_DIR = StringUtils.join(new String[]{"public","interfacespec",""}, File.separator);
+    public static final String PUBLIC_INTERFACESPEC_DIR = StringUtils.join(new String[]{"yamls", ""}, File.separator);
     public static final int HTTP_OK = 200;
-    public static final String LOMBARD_RISK_REST_SPEC_PATH_ENV = System.getProperty("lombard.risk.rest.spec.path");
+    public static final int SEARCH_DEPTH_IS_2 = 2;
+    public static final Character URL_SEPARATOR = '/';
+
+    private CommandExecutor commandIssuer;
+    private String filterUrl;
+    private RESTClient restClient;
+
+    public RESTSpecLRValidator(CommandExecutor commandIssuer, RESTClient restClient) {
+        this.commandIssuer = commandIssuer;
+        this.restClient = restClient;
+    }
+
+    public RESTSpecLRValidator(CommandExecutor commandIssuer, RESTClient restClient, String filterUrl) {
+        this(commandIssuer, restClient);
+        this.filterUrl = filterUrl;
+    }
 
     public void checkIfRestIsBackwardCompatible() throws IOException, RESTsNotCompatibleException {
-        final Collection<SwaggerResource> swaggerResources = prepareJSons(createSwaggers());
+        final Collection<SwaggerResource> swaggerResources = prepareJSons(filterSwaggers(prepareSwaggers()));
         final Collection<SwaggerResource> problematicJSons = new ArrayList<>();
 
-        swaggerResources.parallelStream().forEach(swaggerResource -> {
+        swaggerResources.stream().forEach(swaggerResource -> {
             File temporaryJson = null;
             try {
                 temporaryJson = storeTempFile(prepareTempDirectory(swaggerResource), swaggerResource);
@@ -49,20 +68,32 @@ public class RESTSpecLRControllerTest {
             } catch (IOException e) {
                 log.error(e.getMessage(), e);
             } finally {
-                if(temporaryJson != null) {
+                if (temporaryJson != null) {
                     temporaryJson.delete();
                     new File(temporaryJson.getParent()).delete();
                 }
             }
         });
 
-        if(CollectionUtils.isNotEmpty(problematicJSons)) {
+        if (CollectionUtils.isNotEmpty(problematicJSons)) {
             throw new RESTsNotCompatibleException(problematicJSons);
         }
     }
 
+    private Collection<SwaggerResource> filterSwaggers(Collection<SwaggerResource> swaggerResources) {
+        if (StringUtils.isNotBlank(getFilterSwaggerUrl())) {
+            return swaggerResources.stream().filter(swaggerResource -> swaggerResource.getUrl().contains(getFilterSwaggerUrl())).collect(Collectors.toList());
+        }
+
+        return swaggerResources;
+    }
+
+    private String getFilterSwaggerUrl() {
+        return filterUrl;
+    }
+
     private boolean isBackwardCompatible(final String temporaryJson, final String sourceFilePath) throws IOException {
-        Process process = Runtime.getRuntime().exec(cmdForFiles(SWAGGER_DIFF,temporaryJson,sourceFilePath));
+        Process process = commandIssuer.exec(temporaryJson, sourceFilePath);
         try (BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
              BufferedReader errInput = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
             String message = getStringFromProcess(stdInput) + "\n" + getStringFromProcess(errInput);
@@ -79,15 +110,8 @@ public class RESTSpecLRControllerTest {
         return count <= 0 ? "" : new String(output);
     }
 
-    private String cmdForFiles(String swaggerDiff, String temporaryJson, String sourceFilePath) {
-        String cmd = swaggerDiff.replaceFirst("\\{old\\}", sourceFilePath).replaceAll("\\{new\\}", temporaryJson);
-        log.info("Issued command: " + cmd);
-
-        return cmd;
-    }
-
     private String getSourceFilePath(SwaggerResource swaggerResource) throws FileNotFoundException {
-        if(StringUtils.isNotBlank(LOMBARD_RISK_REST_SPEC_PATH_ENV)) {
+        if (StringUtils.isNotBlank(LOMBARD_RISK_REST_SPEC_PATH_ENV)) {
             return localPathBasedOnSystemProperty(swaggerResource);
         }
 
@@ -95,18 +119,22 @@ public class RESTSpecLRControllerTest {
     }
 
     private String localPathBasedOnSystemProperty(SwaggerResource swaggerResource) {
-        String fullPath = getRESTSpecsFullPath();
-        return fullPath + swaggerResource.getFileName();
+        String fullPath = getRESTSpecsRelativePath();
+        return fullPath + swaggerResource.getFileNamePrefix() + swaggerResource.getFileName();
     }
 
     private String getRESTSpecsFullPath() {
+        return new File(getRESTSpecsRelativePath()).getAbsolutePath();
+    }
+
+    private String getRESTSpecsRelativePath() {
         String lrPath = LOMBARD_RISK_REST_SPEC_PATH_ENV.trim().replaceFirst(File.separator + "$", "");
         return lrPath + File.separator + PUBLIC_INTERFACESPEC_DIR;
     }
 
     private File storeTempFile(File tempDir, SwaggerResource swaggerResource) throws IOException {
         File tempFile = new File(tempDir.getAbsolutePath() + File.separator + jsonFormatName(swaggerResource.getFileName()));
-        try(FileOutputStream fos = new FileOutputStream(tempFile);) {
+        try (FileOutputStream fos = new FileOutputStream(tempFile);) {
             fos.write(swaggerResource.getSource().getBytes(UTF_8_CHARSET));
         }
 
@@ -129,54 +157,44 @@ public class RESTSpecLRControllerTest {
         return fileName.replaceFirst("\\.yaml$", replacement).replaceFirst("\\.yml$", replacement);
     }
 
-    private Collection<SwaggerResource> createSwaggers() throws IOException {
-        Stream<Path> pathStream = Files.list(Paths.get(getRESTSpecsFullPath()));
+    private Collection<SwaggerResource> prepareSwaggers() throws IOException {
+        Stream<Path> pathStream = Files.walk(Paths.get(getRESTSpecsRelativePath()), SEARCH_DEPTH_IS_2);
         return pathStream
                 .filter(path -> Files.isRegularFile(path))
-                .map(path -> new SwaggerResource(path.getFileName().toString(), getApiUrl(path.getFileName().toString())))
+                .filter(path -> path.getFileName().toString().toLowerCase().contains(".yml")
+                             || path.getFileName().toString().toLowerCase().contains(".yaml"))
+                .map(path -> createSwaggerResource(path))
                 .collect(Collectors.toList());
     }
 
-    private String getApiUrl(String baseFileName) {
-        return SWAGGER_API_DOCS_URL.replaceAll("\\{filename\\}", noFormatName(baseFileName));
+    private SwaggerResource createSwaggerResource(Path path) {
+        final String optionalPrefix;
+        {
+            String prefixTmp =
+                    strip(path.getParent().toFile().getAbsolutePath().replace(
+                            getRESTSpecsFullPath(), ""), File.separator)
+                    .replaceAll(File.separator, URL_SEPARATOR.toString());
+            if (StringUtils.isNotBlank(prefixTmp)) {
+                prefixTmp = prefixTmp + URL_SEPARATOR.toString();
+            }
+            optionalPrefix = prefixTmp;
+        }
+        return new SwaggerResource(
+                path.getFileName().toString(),
+                optionalPrefix,
+                getApiUrl(path.getFileName().toString(), optionalPrefix));
     }
 
-    final static class SwaggerResource {
-        private String fileName;
-        private String source;
-        private String url;
-
-        SwaggerResource(String source, SwaggerResource swaggerResource) {
-            this.source = source;
-            this.fileName = swaggerResource.getFileName();
-            this.url = swaggerResource.getUrl();
-        }
-
-        SwaggerResource(String fileName, String url) {
-            this.fileName = fileName;
-            this.url = url;
-        }
-
-        public String getFileName() {
-            return fileName;
-        }
-
-        public String getSource() {
-            return source;
-        }
-
-        public String getUrl() {
-            return url;
-        }
+    private String getApiUrl(String baseFileName, String prefix) {
+        return SWAGGER_API_DOCS_URL_ENV.replaceAll("\\{filename\\}", prefix + noFormatName(baseFileName));
     }
 
     private Collection<SwaggerResource> prepareJSons(Collection<SwaggerResource> swaggers) {
         List<SwaggerResource> jsonsSwaggers = swaggers.parallelStream().map(swaggerResource -> {
-            HttpClient httpClient = new HttpClient();
-            HttpMethod getJson = new GetMethod(swaggerResource.getUrl());
+            HttpMethod getJson = restClient.createGetMethod(swaggerResource.getUrl());
             try {
-                int result = httpClient.executeMethod(getJson);
-                if(result != HTTP_OK) {
+                int result = restClient.executeMethod(getJson);
+                if (result != HTTP_OK) {
                     throw new IllegalStateException("Wrong server response: " + result + " for " + swaggerResource.getUrl());
                 }
                 return new SwaggerResource(getJson.getResponseBodyAsString(), swaggerResource);
