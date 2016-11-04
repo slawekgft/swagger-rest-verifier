@@ -35,7 +35,7 @@ public class RESTSpecLRValidatorTest {
         CommandExecutor cmdIss = new MockCommandExecutor();
         HttpMethod getHTTPMethod = BDDMockito.mock(HttpMethod.class);
         MockRESTClient restClient = new MockRESTClient(RESTSpecLRValidator.HTTP_OK, getHTTPMethod);
-        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient);
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, new SwaggerBuilder());
 
         given(getHTTPMethod.getResponseBodyAsString()).willReturn("swagger: 2.0");
 
@@ -68,7 +68,7 @@ public class RESTSpecLRValidatorTest {
         CommandExecutor cmdIss = new MockCommandExecutor();
         RESTClient restClient = BDDMockito.mock(RESTClient.class);
         HttpMethod getHTTPMethod = BDDMockito.mock(HttpMethod.class);
-        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, FILTER_URL);
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, FILTER_URL, new SwaggerBuilder());
 
         given(restClient.executeMethod(any(HttpMethod.class))).willReturn(RESTSpecLRValidator.HTTP_OK);
         given(restClient.createGetMethod(anyString())).willReturn(getHTTPMethod);

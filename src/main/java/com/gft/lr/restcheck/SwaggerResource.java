@@ -1,7 +1,7 @@
 package com.gft.lr.restcheck;
 
 /**
- * Created by Sławomir Węgrzyn, GFT on 02/11/16.
+ * Created on 02/11/16.
  */
 public class SwaggerResource {
     private String fileName;
@@ -36,6 +36,16 @@ public class SwaggerResource {
 
     public String getFileNamePrefix() {
         return fileNamePrefix;
+    }
+
+    @Override
+    public String toString() {
+        return "SwaggerResource{" +
+                "fileName='" + fileName + '\'' +
+                ", fileNamePrefix='" + fileNamePrefix + '\'' +
+                ", source='" + source + '\'' +
+                ", url='" + url + '\'' +
+                '}';
     }
 }
 

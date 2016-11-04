@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.apache.commons.lang3.StringUtils.strip;
-
 /**
  * @author: Sławomir Węgrzyn
  * @date: 17/10/2016
@@ -31,25 +29,25 @@ public class RESTSpecLRValidator {
 
     public static final String ENV_PREF = "lr.restwatch.";
     public static final String LOMBARD_RISK_REST_SPEC_PATH_ENV = System.getProperty(ENV_PREF + "rest.spec.path");
-    public static final String SWAGGER_API_DOCS_URL_ENV = System.getProperty(ENV_PREF + "url").trim().replaceFirst("/$", "") + "/{filename}.json";
 
     public static final String UTF_8_CHARSET = "utf-8";
-    public static final String PUBLIC_INTERFACESPEC_DIR = StringUtils.join(new String[]{"yamls", ""}, File.separator);
     public static final int HTTP_OK = 200;
     public static final int SEARCH_DEPTH_IS_2 = 2;
     public static final Character URL_SEPARATOR = '/';
 
     private CommandExecutor commandIssuer;
     private String filterUrl;
+    private SwaggerBuilder swaggerBuilder;
     private RESTClient restClient;
 
-    public RESTSpecLRValidator(CommandExecutor commandIssuer, RESTClient restClient) {
+    public RESTSpecLRValidator(CommandExecutor commandIssuer, RESTClient restClient, SwaggerBuilder swaggerBuilder) {
         this.commandIssuer = commandIssuer;
         this.restClient = restClient;
+        this.swaggerBuilder = swaggerBuilder;
     }
 
-    public RESTSpecLRValidator(CommandExecutor commandIssuer, RESTClient restClient, String filterUrl) {
-        this(commandIssuer, restClient);
+    public RESTSpecLRValidator(CommandExecutor commandIssuer, RESTClient restClient, String filterUrl, SwaggerBuilder swaggerBuilder) {
+        this(commandIssuer, restClient, swaggerBuilder);
         this.filterUrl = filterUrl;
     }
 
@@ -119,17 +117,8 @@ public class RESTSpecLRValidator {
     }
 
     private String localPathBasedOnSystemProperty(SwaggerResource swaggerResource) {
-        String fullPath = getRESTSpecsRelativePath();
+        String fullPath = swaggerBuilder.getRESTSpecsRelativePath();
         return fullPath + swaggerResource.getFileNamePrefix() + swaggerResource.getFileName();
-    }
-
-    private String getRESTSpecsFullPath() {
-        return new File(getRESTSpecsRelativePath()).getAbsolutePath();
-    }
-
-    private String getRESTSpecsRelativePath() {
-        String lrPath = LOMBARD_RISK_REST_SPEC_PATH_ENV.trim().replaceFirst(File.separator + "$", "");
-        return lrPath + File.separator + PUBLIC_INTERFACESPEC_DIR;
     }
 
     private File storeTempFile(File tempDir, SwaggerResource swaggerResource) throws IOException {
@@ -146,50 +135,21 @@ public class RESTSpecLRValidator {
     }
 
     private String jsonFormatName(String fileName) {
-        return yamlExtReplace(fileName, ".json");
-    }
-
-    private String noFormatName(String fileName) {
-        return yamlExtReplace(fileName, "");
-    }
-
-    private String yamlExtReplace(String fileName, String replacement) {
-        return fileName.replaceFirst("\\.yaml$", replacement).replaceFirst("\\.yml$", replacement);
+        return swaggerBuilder.yamlExtReplace(fileName, ".json");
     }
 
     private Collection<SwaggerResource> prepareSwaggers() throws IOException {
-        Stream<Path> pathStream = Files.walk(Paths.get(getRESTSpecsRelativePath()), SEARCH_DEPTH_IS_2);
+        Stream<Path> pathStream = Files.walk(Paths.get(swaggerBuilder.getRESTSpecsRelativePath()), SEARCH_DEPTH_IS_2);
         return pathStream
                 .filter(path -> Files.isRegularFile(path))
                 .filter(path -> path.getFileName().toString().toLowerCase().contains(".yml")
-                             || path.getFileName().toString().toLowerCase().contains(".yaml"))
-                .map(path -> createSwaggerResource(path))
+                        || path.getFileName().toString().toLowerCase().contains(".yaml"))
+                .map(path -> swaggerBuilder.createSwaggerResource(path))
                 .collect(Collectors.toList());
     }
 
-    private SwaggerResource createSwaggerResource(Path path) {
-        final String optionalPrefix;
-        {
-            String prefixTmp =
-                    strip(path.getParent().toFile().getAbsolutePath().replace(
-                            getRESTSpecsFullPath(), ""), File.separator)
-                    .replaceAll(File.separator, URL_SEPARATOR.toString());
-            if (StringUtils.isNotBlank(prefixTmp)) {
-                prefixTmp = prefixTmp + URL_SEPARATOR.toString();
-            }
-            optionalPrefix = prefixTmp;
-        }
-        return new SwaggerResource(
-                path.getFileName().toString(),
-                optionalPrefix,
-                getApiUrl(path.getFileName().toString(), optionalPrefix));
-    }
-
-    private String getApiUrl(String baseFileName, String prefix) {
-        return SWAGGER_API_DOCS_URL_ENV.replaceAll("\\{filename\\}", prefix + noFormatName(baseFileName));
-    }
-
     private Collection<SwaggerResource> prepareJSons(Collection<SwaggerResource> swaggers) {
+        log.debug("prepareJSons from following swaggers: " + swaggers);
         List<SwaggerResource> jsonsSwaggers = swaggers.parallelStream().map(swaggerResource -> {
             HttpMethod getJson = restClient.createGetMethod(swaggerResource.getUrl());
             try {
@@ -202,8 +162,6 @@ public class RESTSpecLRValidator {
                 throw new RuntimeException(e);
             }
         }).collect(Collectors.toList());
-
-        log.debug("Tested JSON:\n" + jsonsSwaggers.get(0).getSource());
 
         return jsonsSwaggers;
     }
