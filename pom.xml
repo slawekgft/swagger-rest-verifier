@@ -4,7 +4,7 @@
 
     <groupId>lombardrisk</groupId>
     <artifactId>restwatcher</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
     <packaging>jar</packaging>
     <name>restwatcher</name>
     <url>http://maven.apache.org</url>

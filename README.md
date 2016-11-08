@@ -7,9 +7,9 @@ It simply checks if instance REST service is backward compatible with YAML files
 If you build from sources:
 * > mvn clean package
 * > cd target
-* > rm restwatcher-<ver>.jar
-* > mv restwatcher-<ver>-jar-with-dependencies.jar restwatcher-<ver>.jar
-* > jar xf restwatcher-<ver>.jar checkFacadeRESTs.sh
+* > rm restwatcher-\<ver\>.jar
+* > mv restwatcher-\<ver\>-jar-with-dependencies.jar restwatcher-<ver>.jar
+* > jar xf restwatcher-\<ver\>.jar checkFacadeRESTs.sh
 * > chmod 766 checkFacadeRESTs.sh
 
 Location is injected as in this example (use `lombard.risk.rest.spec.path` env var):
