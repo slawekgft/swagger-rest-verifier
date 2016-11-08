@@ -28,7 +28,7 @@ while [ "$1" != "" ]; do
 
 if [[ -z "${FACADE_URL}" ]] || [[ -z "${FULL_PATH}" ]]; then
     echo "Usage:"
-    echo "> checkFacadeRESTs.sh -s <spec YAML uri> -u <facade url> [spec name filter]"
+    echo "> checkFacadeRESTs.sh -s <spec YAML uri> -u <facade url> -f [spec name filter]"
     exit -1
 fi
 
@@ -49,7 +49,7 @@ fi
 mkdir /tmp/yamls
 cp -R $DIR_NAME/* /tmp/yamls
 
-echo "java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -cp lib -jar restwatcher-1.0-SNAPSHOT.jar $FILTER"
-java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -cp lib -jar restwatcher-1.0-SNAPSHOT.jar $FILTER
+echo "java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -cp lib -jar restwatcher-${project.version}.jar $FILTER"
+java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -cp lib -jar restwatcher-${project.version}.jar $FILTER
 
 rm -rf /tmp/yamls
