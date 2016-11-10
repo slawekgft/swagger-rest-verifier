@@ -11,10 +11,13 @@ import java.util.stream.Collectors;
  */
 public class RESTsNotCompatibleException extends Exception {
 
+    public static final String SEPARATOR = "============================================\n";
     private final Collection<SwaggerResource> problematicSpecs;
 
     public RESTsNotCompatibleException(Collection<SwaggerResource> problematicSpecs) {
-        super("Following REST specs are not backward compatible: \n");
+        super("-----------------------------------------------------\n" +
+              "| Following REST specs are not backward compatible: |\n" +
+              "-----------------------------------------------------\n");
         if (problematicSpecs == null) {
             throw new NullPointerException();
         }
@@ -28,7 +31,7 @@ public class RESTsNotCompatibleException extends Exception {
     public String getMessage() {
         return StringUtils.defaultString(super.getMessage())
                 + getProblematicSpecs().stream()
-                .map(swaggerResource -> swaggerResource.getUrl())
-                .collect(Collectors.joining(",\n"));
+                .map(swaggerResource -> {return SEPARATOR + swaggerResource.getUrl() + "\n" + swaggerResource.getError();})
+                .collect(Collectors.joining("\n"));
     }
 }

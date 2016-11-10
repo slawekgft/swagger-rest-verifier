@@ -3,10 +3,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>lombardrisk</groupId>
-    <artifactId>restwatcher</artifactId>
+    <artifactId>swagger-rest-validator</artifactId>
     <version>1.2</version>
     <packaging>jar</packaging>
-    <name>restwatcher</name>
+    <name>REST specs validator of Swagger API</name>
     <url>http://maven.apache.org</url>
 
     <properties>
@@ -74,7 +74,7 @@
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <finalName>restwatcher-${project.version}</finalName>
+                    <finalName>swagger-rest-validator-${project.version}</finalName>
                     <archive>
                         <manifest>
                             <mainClass>com.gft.lr.restcheck.CheckRestSpecApplication</mainClass>

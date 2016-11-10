@@ -37,10 +37,11 @@ REPO=$(grep -oE "\\.git$" <<< "${FULL_PATH}")
 leng=${#REPO}
 if [ $leng -ge 1 ]; then
     GIT_NAME=$(grep -oE "[^//]+$" <<< "${FULL_PATH}")
-    DIR_NAME=$(grep -oE "^[^\\.]*" <<< "${GIT_NAME}")
+    DIR_NAME=$(basename "$GIT_NAME")
+    DIR_NAME="${DIR_NAME%.*}"
 
-    echo "GIT_NAME=${GIT_NAME}"
-    echo "DIR_NAME=${DIR_NAME}"
+    echo "GIT repo is '${GIT_NAME}'"
+    echo "directory name is '${DIR_NAME}'"
     git clone $FULL_PATH
 else
     DIR_NAME=$FULL_PATH
@@ -49,7 +50,14 @@ fi
 mkdir /tmp/yamls
 cp -R $DIR_NAME/* /tmp/yamls
 
-echo "java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -cp lib -jar restwatcher-${project.version}.jar $FILTER"
-java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -cp lib -jar restwatcher-${project.version}.jar $FILTER
+if [ -z "$REST_VERIFIER_LOG" ]; then export REST_VERIFIER_LOG=verifier.log; fi
+
+echo "java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -jar swagger-rest-validator-${project.version}.jar $FILTER"
+java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -jar swagger-rest-validator-${project.version}.jar $FILTER > $REST_VERIFIER_LOG
+
+EXIT_STATUS=$?
+echo "Exit status is $EXIT_STATUS"
 
 rm -rf /tmp/yamls
+
+exit $EXIT_STATUS
