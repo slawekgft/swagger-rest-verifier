@@ -11,7 +11,7 @@ import java.io.IOException;
 public class RuntimeExecutor {
     private static final Logger log = LoggerFactory.getLogger(RuntimeExecutor.class);
 
-    public Process exec (String commad) throws IOException {
+    public Process exec(String commad) throws IOException {
         log.debug("> " + commad);
         return Runtime.getRuntime().exec(commad);
     }

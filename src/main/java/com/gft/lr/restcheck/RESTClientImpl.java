@@ -2,7 +2,6 @@ package com.gft.lr.restcheck;
 
 import com.gft.lr.restcheck.ifc.RESTClient;
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.slf4j.Logger;
@@ -23,7 +22,7 @@ public class RESTClientImpl implements RESTClient {
         HttpClient httpClient = new HttpClient();
         int status = httpClient.executeMethod(method);
 
-        if(status != HttpURLConnection.HTTP_OK) {
+        if (status != HttpURLConnection.HTTP_OK) {
             log.warn("executeMethod '" + method.getPath() + "'\nreturned: [" + status + "] and\n'" + method.getResponseBodyAsString() + "'");
         }
 

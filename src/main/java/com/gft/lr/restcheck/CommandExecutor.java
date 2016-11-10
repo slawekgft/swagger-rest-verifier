@@ -38,7 +38,7 @@ public class CommandExecutor {
         } catch (InterruptedException e) {
             throw new IOException(e);
         }
-        if(process.exitValue() == 0) {
+        if (process.exitValue() == 0) {
             log.debug("temp file is '" + outputDir + File.separator + DEFAULT_SWAGGER_YAML + "'");
             return new File(outputDir + File.separator + DEFAULT_SWAGGER_YAML);
         }
@@ -50,7 +50,7 @@ public class CommandExecutor {
     }
 
     private String setParams(String template, final String[] values, final String[] names) {
-        for (int i=0; i<values.length; i++) {
+        for (int i = 0; i < values.length; i++) {
             template = template.replaceFirst("\\{" + names[i] + "\\}", values[i]);
         }
 

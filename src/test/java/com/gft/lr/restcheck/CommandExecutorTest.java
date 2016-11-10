@@ -3,7 +3,6 @@ package com.gft.lr.restcheck;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -27,7 +26,7 @@ import static org.mockito.Mockito.verify;
 @RunWith(MockitoJUnitRunner.class)
 public class CommandExecutorTest {
 
-    public static final String FILES_PARENT =  new File("./").getAbsolutePath() + File.separator + "test/resources/yamls";
+    public static final String FILES_PARENT = new File("./").getAbsolutePath() + File.separator + "test/resources/yamls";
     public static final String JSON_FILE_PATH = FILES_PARENT + "/spec0_1.json";
     public static final String YAML_FILE_PATH = FILES_PARENT + "/spec0_1.yaml";
 

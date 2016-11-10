@@ -52,7 +52,7 @@ public class SwaggerResource {
 
     @Override
     public String toString() {
-        if(null != error) {
+        if (null != error) {
             return "SwaggerResource{" +
                     "fileName='" + fileName + '\'' +
                     ", error='" + error + '\'' +

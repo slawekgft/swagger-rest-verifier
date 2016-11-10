@@ -15,7 +15,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -87,7 +86,7 @@ public class RESTSpecLRValidator {
     private void closeIfNotNull(File temporaryJson, boolean withDirectory) {
         if (temporaryJson != null) {
             temporaryJson.delete();
-            if(withDirectory) {
+            if (withDirectory) {
                 new File(temporaryJson.getParent()).delete();
             }
         }
@@ -135,10 +134,11 @@ public class RESTSpecLRValidator {
         int count;
         char[] output = new char[128];
         count = stdInput.read(output);
-        while (count>0) {
+        while (count > 0) {
             sb.append(output, 0, count);
             count = stdInput.read(output);
-        };
+        }
+        ;
 
         return sb.toString();
     }

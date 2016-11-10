@@ -16,8 +16,8 @@ public class RESTsNotCompatibleException extends Exception {
 
     public RESTsNotCompatibleException(Collection<SwaggerResource> problematicSpecs) {
         super("-----------------------------------------------------\n" +
-              "| Following REST specs are not backward compatible: |\n" +
-              "-----------------------------------------------------\n");
+                "| Following REST specs are not backward compatible: |\n" +
+                "-----------------------------------------------------\n");
         if (problematicSpecs == null) {
             throw new NullPointerException();
         }
@@ -31,7 +31,9 @@ public class RESTsNotCompatibleException extends Exception {
     public String getMessage() {
         return StringUtils.defaultString(super.getMessage())
                 + getProblematicSpecs().stream()
-                .map(swaggerResource -> {return SEPARATOR + swaggerResource.getUrl() + "\n" + swaggerResource.getError();})
+                .map(swaggerResource -> {
+                    return SEPARATOR + swaggerResource.getUrl() + "\n" + swaggerResource.getError();
+                })
                 .collect(Collectors.joining("\n"));
     }
 }
