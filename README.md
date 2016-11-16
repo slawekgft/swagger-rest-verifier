@@ -16,6 +16,13 @@ Location is injected as in this example (use `lombard.risk.rest.spec.path` env v
 * > `./checkFacadeRESTs.sh -s git@git.gft.com:ac/rest-contract.agile-collateral.git -u http://localhost:9000/api`
 or
 * > './checkFacadeRESTs.sh -s /src/LR/facade-contracts -u http://localhost:9000/api'
+* > mvn clean package
+* > cd target
+* > rm swagger-rest-validator-\<ver\>.jar
+
+Also there must be swagger-diff installed in local machine:
+* > apt-get install --assume-yes ruby
+* > gem install swagger-diff
 
 Add `-f login` if you want to check only `login` api. Controllers must have proper resource path configred.
 See examples in Facade `routes` file.
