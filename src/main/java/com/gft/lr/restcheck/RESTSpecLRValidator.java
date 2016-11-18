@@ -1,7 +1,6 @@
 package com.gft.lr.restcheck;
 
 
-import com.gft.lr.restcheck.ifc.CommandExecutor;
 import com.gft.lr.restcheck.ifc.RESTClient;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.HttpMethod;
@@ -19,11 +18,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.apache.commons.lang3.StringUtils.strip;
+import static java.lang.String.join;
 
 /**
- * @author: Sławomir Węgrzyn
- * @date: 17/10/2016
+ * Created on 17/10/2016
  */
 public class RESTSpecLRValidator {
 
@@ -31,25 +29,26 @@ public class RESTSpecLRValidator {
 
     public static final String ENV_PREF = "lr.restwatch.";
     public static final String LOMBARD_RISK_REST_SPEC_PATH_ENV = System.getProperty(ENV_PREF + "rest.spec.path");
-    public static final String SWAGGER_API_DOCS_URL_ENV = System.getProperty(ENV_PREF + "url").trim().replaceFirst("/$", "") + "/{filename}.json";
 
     public static final String UTF_8_CHARSET = "utf-8";
-    public static final String PUBLIC_INTERFACESPEC_DIR = StringUtils.join(new String[]{"yamls", ""}, File.separator);
     public static final int HTTP_OK = 200;
     public static final int SEARCH_DEPTH_IS_2 = 2;
     public static final Character URL_SEPARATOR = '/';
+    public static final String WRONG_SERVER_RESPONSE = "Wrong server response: ";
 
-    private CommandExecutor commandIssuer;
+    private CommandExecutor commandExecutor;
     private String filterUrl;
+    private SwaggerBuilder swaggerBuilder;
     private RESTClient restClient;
 
-    public RESTSpecLRValidator(CommandExecutor commandIssuer, RESTClient restClient) {
-        this.commandIssuer = commandIssuer;
+    public RESTSpecLRValidator(CommandExecutor commandExecutor, RESTClient restClient, SwaggerBuilder swaggerBuilder) {
+        this.commandExecutor = commandExecutor;
         this.restClient = restClient;
+        this.swaggerBuilder = swaggerBuilder;
     }
 
-    public RESTSpecLRValidator(CommandExecutor commandIssuer, RESTClient restClient, String filterUrl) {
-        this(commandIssuer, restClient);
+    public RESTSpecLRValidator(CommandExecutor commandExecutor, RESTClient restClient, String filterUrl, SwaggerBuilder swaggerBuilder) {
+        this(commandExecutor, restClient, swaggerBuilder);
         this.filterUrl = filterUrl;
     }
 
@@ -57,27 +56,46 @@ public class RESTSpecLRValidator {
         final Collection<SwaggerResource> swaggerResources = prepareJSons(filterSwaggers(prepareSwaggers()));
         final Collection<SwaggerResource> problematicJSons = new ArrayList<>();
 
-        swaggerResources.stream().forEach(swaggerResource -> {
-            File temporaryJson = null;
-            try {
-                temporaryJson = storeTempFile(prepareTempDirectory(swaggerResource), swaggerResource);
-                String sourceFilePath = getSourceFilePath(swaggerResource);
-                if (!isBackwardCompatible(temporaryJson.getAbsolutePath(), sourceFilePath)) {
-                    problematicJSons.add(swaggerResource);
-                }
-            } catch (IOException e) {
-                log.error(e.getMessage(), e);
-            } finally {
-                if (temporaryJson != null) {
-                    temporaryJson.delete();
-                    new File(temporaryJson.getParent()).delete();
-                }
-            }
-        });
+        swaggerResources.stream().filter(SwaggerResource::valid).forEach(swaggerResource -> validate(problematicJSons, swaggerResource));
+        problematicJSons.addAll(swaggerResources.stream().filter((swaggerResource) -> !swaggerResource.valid()).collect(Collectors.toList()));
 
         if (CollectionUtils.isNotEmpty(problematicJSons)) {
             throw new RESTsNotCompatibleException(problematicJSons);
         }
+    }
+
+    private void validate(Collection<SwaggerResource> problematicJSons, SwaggerResource swaggerResource) {
+        File temporaryJson = null;
+        File temporaryYaml = null;
+        try {
+            temporaryJson = storeTempFile(prepareTempDirectory(swaggerResource), swaggerResource);
+            temporaryYaml = convert2Yaml(temporaryJson);
+            String sourceFilePath = getSourceFilePath(swaggerResource);
+            StringBuffer errors = new StringBuffer();
+            if (!isBackwardCompatible(temporaryYaml.getAbsolutePath(), sourceFilePath, errors)) {
+                problematicJSons.add(new SwaggerResource(swaggerResource, errors.toString()));
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        } finally {
+            closeIfNotNull(temporaryJson, false);
+            closeIfNotNull(temporaryYaml, true);
+        }
+    }
+
+    private void closeIfNotNull(File temporaryJson, boolean withDirectory) {
+        if (temporaryJson != null) {
+            temporaryJson.delete();
+            if (withDirectory) {
+                new File(temporaryJson.getParent()).delete();
+            }
+        }
+    }
+
+    private File convert2Yaml(File temporaryJson) throws IOException {
+        File destYamlDir = temporaryJson.getParentFile();
+
+        return commandExecutor.convert(temporaryJson.getAbsolutePath(), destYamlDir.getAbsolutePath());
     }
 
     private Collection<SwaggerResource> filterSwaggers(Collection<SwaggerResource> swaggerResources) {
@@ -92,22 +110,37 @@ public class RESTSpecLRValidator {
         return filterUrl;
     }
 
-    private boolean isBackwardCompatible(final String temporaryJson, final String sourceFilePath) throws IOException {
-        Process process = commandIssuer.exec(temporaryJson, sourceFilePath);
+    private boolean isBackwardCompatible(final String temporaryJson,
+                                         final String sourceFilePath,
+                                         final StringBuffer outBuffer) throws IOException {
+        Process process = commandExecutor.compare(temporaryJson, sourceFilePath);
         try (BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
              BufferedReader errInput = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-            String message = getStringFromProcess(stdInput) + "\n" + getStringFromProcess(errInput);
+            process.waitFor();
+            String errors = getStringFromStream(errInput);
+            String message = join("\n", getStringFromStream(stdInput), errors);
+            outBuffer.append(message);
             log.info("Comparing tool output:\n" + message);
 
-            return StringUtils.isBlank(message);
+            return process.exitValue() == 0;
+        } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+            throw new IOException(e);
         }
     }
 
-    private String getStringFromProcess(BufferedReader stdInput) throws IOException {
-        char[] output = new char[1024];
-        int count = stdInput.read(output);
+    private String getStringFromStream(BufferedReader stdInput) throws IOException {
+        StringBuffer sb = new StringBuffer();
+        int count;
+        char[] output = new char[128];
+        count = stdInput.read(output);
+        while (count > 0) {
+            sb.append(output, 0, count);
+            count = stdInput.read(output);
+        }
+        ;
 
-        return count <= 0 ? "" : new String(output);
+        return sb.toString();
     }
 
     private String getSourceFilePath(SwaggerResource swaggerResource) throws FileNotFoundException {
@@ -119,17 +152,8 @@ public class RESTSpecLRValidator {
     }
 
     private String localPathBasedOnSystemProperty(SwaggerResource swaggerResource) {
-        String fullPath = getRESTSpecsRelativePath();
+        String fullPath = swaggerBuilder.getRESTSpecsRelativePath();
         return fullPath + swaggerResource.getFileNamePrefix() + swaggerResource.getFileName();
-    }
-
-    private String getRESTSpecsFullPath() {
-        return new File(getRESTSpecsRelativePath()).getAbsolutePath();
-    }
-
-    private String getRESTSpecsRelativePath() {
-        String lrPath = LOMBARD_RISK_REST_SPEC_PATH_ENV.trim().replaceFirst(File.separator + "$", "");
-        return lrPath + File.separator + PUBLIC_INTERFACESPEC_DIR;
     }
 
     private File storeTempFile(File tempDir, SwaggerResource swaggerResource) throws IOException {
@@ -146,64 +170,33 @@ public class RESTSpecLRValidator {
     }
 
     private String jsonFormatName(String fileName) {
-        return yamlExtReplace(fileName, ".json");
-    }
-
-    private String noFormatName(String fileName) {
-        return yamlExtReplace(fileName, "");
-    }
-
-    private String yamlExtReplace(String fileName, String replacement) {
-        return fileName.replaceFirst("\\.yaml$", replacement).replaceFirst("\\.yml$", replacement);
+        return swaggerBuilder.yamlExtReplace(fileName, ".json");
     }
 
     private Collection<SwaggerResource> prepareSwaggers() throws IOException {
-        Stream<Path> pathStream = Files.walk(Paths.get(getRESTSpecsRelativePath()), SEARCH_DEPTH_IS_2);
+        Stream<Path> pathStream = Files.walk(Paths.get(swaggerBuilder.getRESTSpecsRelativePath()), SEARCH_DEPTH_IS_2);
         return pathStream
                 .filter(path -> Files.isRegularFile(path))
                 .filter(path -> path.getFileName().toString().toLowerCase().contains(".yml")
-                             || path.getFileName().toString().toLowerCase().contains(".yaml"))
-                .map(path -> createSwaggerResource(path))
+                        || path.getFileName().toString().toLowerCase().contains(".yaml"))
+                .map(path -> swaggerBuilder.createSwaggerResource(path))
                 .collect(Collectors.toList());
     }
 
-    private SwaggerResource createSwaggerResource(Path path) {
-        final String optionalPrefix;
-        {
-            String prefixTmp =
-                    strip(path.getParent().toFile().getAbsolutePath().replace(
-                            getRESTSpecsFullPath(), ""), File.separator)
-                    .replaceAll(File.separator, URL_SEPARATOR.toString());
-            if (StringUtils.isNotBlank(prefixTmp)) {
-                prefixTmp = prefixTmp + URL_SEPARATOR.toString();
-            }
-            optionalPrefix = prefixTmp;
-        }
-        return new SwaggerResource(
-                path.getFileName().toString(),
-                optionalPrefix,
-                getApiUrl(path.getFileName().toString(), optionalPrefix));
-    }
-
-    private String getApiUrl(String baseFileName, String prefix) {
-        return SWAGGER_API_DOCS_URL_ENV.replaceAll("\\{filename\\}", prefix + noFormatName(baseFileName));
-    }
-
     private Collection<SwaggerResource> prepareJSons(Collection<SwaggerResource> swaggers) {
+        log.debug("prepareJSons from following swaggers: " + swaggers);
         List<SwaggerResource> jsonsSwaggers = swaggers.parallelStream().map(swaggerResource -> {
             HttpMethod getJson = restClient.createGetMethod(swaggerResource.getUrl());
             try {
                 int result = restClient.executeMethod(getJson);
                 if (result != HTTP_OK) {
-                    throw new IllegalStateException("Wrong server response: " + result + " for " + swaggerResource.getUrl());
+                    return new SwaggerResource(swaggerResource, WRONG_SERVER_RESPONSE + result + " for " + swaggerResource.getUrl() + ". See app logs for details.");
                 }
                 return new SwaggerResource(getJson.getResponseBodyAsString(), swaggerResource);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }).collect(Collectors.toList());
-
-        log.debug("Tested JSON:\n" + jsonsSwaggers.get(0).getSource());
 
         return jsonsSwaggers;
     }
