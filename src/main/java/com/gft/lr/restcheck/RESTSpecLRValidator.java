@@ -12,9 +12,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -36,6 +34,9 @@ public class RESTSpecLRValidator {
     public static final Character URL_SEPARATOR = '/';
     public static final String WRONG_SERVER_RESPONSE = "Wrong server response: ";
 
+    final static Set<String> IGNORED_PATHS = new HashSet<>();
+    public static final String VALIDATORIGNORE = ".validatorignore";
+
     private CommandExecutor commandExecutor;
     private String filterUrl;
     private SwaggerBuilder swaggerBuilder;
@@ -45,6 +46,8 @@ public class RESTSpecLRValidator {
         this.commandExecutor = commandExecutor;
         this.restClient = restClient;
         this.swaggerBuilder = swaggerBuilder;
+
+        initializeConfiguration();
     }
 
     public RESTSpecLRValidator(CommandExecutor commandExecutor, RESTClient restClient, String filterUrl, SwaggerBuilder swaggerBuilder) {
@@ -138,7 +141,6 @@ public class RESTSpecLRValidator {
             sb.append(output, 0, count);
             count = stdInput.read(output);
         }
-        ;
 
         return sb.toString();
     }
@@ -177,10 +179,22 @@ public class RESTSpecLRValidator {
         Stream<Path> pathStream = Files.walk(Paths.get(swaggerBuilder.getRESTSpecsRelativePath()), SEARCH_DEPTH_IS_2);
         return pathStream
                 .filter(path -> Files.isRegularFile(path))
+                .filter(path -> notIgnored(path))
                 .filter(path -> path.getFileName().toString().toLowerCase().contains(".yml")
                         || path.getFileName().toString().toLowerCase().contains(".yaml"))
                 .map(path -> swaggerBuilder.createSwaggerResource(path))
                 .collect(Collectors.toList());
+    }
+
+    private boolean notIgnored(Path path) {
+        for (String ignoredPath : IGNORED_PATHS) {
+            if (path.toString().contains(ignoredPath)) {
+                log.info("Ignored path: " + path);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private Collection<SwaggerResource> prepareJSons(Collection<SwaggerResource> swaggers) {
@@ -200,4 +214,21 @@ public class RESTSpecLRValidator {
 
         return jsonsSwaggers;
     }
+
+    private void initializeConfiguration() {
+        try (InputStream inputStream
+                     = new FileInputStream(
+                swaggerBuilder.getRESTSpecsRelativePath() + VALIDATORIGNORE)) {
+            if (null != inputStream) {
+                final LineNumberReader ignoredReader = new LineNumberReader(new InputStreamReader(inputStream));
+                String line;
+                while ((line = ignoredReader.readLine()) != null) {
+                    IGNORED_PATHS.add(line);
+                }
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
 }
