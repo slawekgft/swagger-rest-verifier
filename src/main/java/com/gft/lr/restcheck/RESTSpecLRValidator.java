@@ -216,18 +216,20 @@ public class RESTSpecLRValidator {
     }
 
     private void initializeConfiguration() {
-        try (InputStream inputStream
-                     = new FileInputStream(
-                swaggerBuilder.getRESTSpecsRelativePath() + VALIDATORIGNORE)) {
-            if (null != inputStream) {
-                final LineNumberReader ignoredReader = new LineNumberReader(new InputStreamReader(inputStream));
-                String line;
-                while ((line = ignoredReader.readLine()) != null) {
-                    IGNORED_PATHS.add(line);
+        final String ignorePath = swaggerBuilder.getRESTSpecsRelativePath() + VALIDATORIGNORE;
+        if (new File(ignorePath).exists()) {
+            try (InputStream inputStream
+                         = new FileInputStream(ignorePath)) {
+                if (null != inputStream) {
+                    final LineNumberReader ignoredReader = new LineNumberReader(new InputStreamReader(inputStream));
+                    String line;
+                    while ((line = ignoredReader.readLine()) != null) {
+                        IGNORED_PATHS.add(line);
+                    }
                 }
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
             }
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
         }
     }
 

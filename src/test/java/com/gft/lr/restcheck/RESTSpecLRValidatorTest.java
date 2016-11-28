@@ -58,6 +58,32 @@ public class RESTSpecLRValidatorTest {
     }
 
     @Test
+    public void shouldNotFailWhenNoIgnoreFile() throws Exception {
+        // given
+        System.setProperty(RESTSpecLRValidator.ENV_PREF + "rest.spec.path", "src/test/resources/yamls2");
+        CommandExecutor cmdIss = mock(CommandExecutor.class);
+        RESTClient restClient = mock(RESTClient.class);
+        HttpMethod getHTTPMethod = mock(HttpMethod.class);
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, null, new SwaggerBuilder() {
+            protected String getPublicInterfaceSpecDir() {
+                return "yamls2" + File.separator;
+            }
+        });
+
+        given(cmdIss.compare(anyString(), anyString())).willAnswer(compareAnswer());
+        given(cmdIss.convert(anyString(), anyString())).willAnswer(convertAnswer());
+        given(restClient.executeMethod(any(HttpMethod.class))).willReturn(RESTSpecLRValidator.HTTP_OK);
+        given(restClient.createGetMethod(anyString())).willReturn(getHTTPMethod);
+        given(getHTTPMethod.getResponseBodyAsString()).willReturn("swagger: 2.0");
+
+        // when
+        restSpecLRValidator.checkIfRestIsBackwardCompatible();
+
+        // then
+        // no exception, one verification
+    }
+
+    @Test
     public void checkIfRestIsBackwardCompatibleFilteredSpecs() throws Exception {
         // given
         CommandExecutor cmdIss = mock(CommandExecutor.class);
