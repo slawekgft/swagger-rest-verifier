@@ -49,11 +49,12 @@ fi
 
 mkdir /tmp/yamls
 cp -R $DIR_NAME/* /tmp/yamls
+cp $DIR_NAME/.validatorignore /tmp/yamls
 
 if [ -z "$REST_VERIFIER_LOG" ]; then export REST_VERIFIER_LOG=verifier.log; fi
 
 echo "java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -jar swagger-rest-validator.jar $FILTER"
-java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -jar swagger-rest-validator.jar $FILTER > $REST_VERIFIER_LOG
+java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -jar swagger-rest-validator.jar $FILTER 2> $REST_VERIFIER_LOG
 
 EXIT_STATUS=$?
 echo "Exit status is $EXIT_STATUS"
