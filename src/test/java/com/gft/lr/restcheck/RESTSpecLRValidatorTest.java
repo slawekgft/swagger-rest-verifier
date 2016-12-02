@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
@@ -59,6 +58,32 @@ public class RESTSpecLRValidatorTest {
     }
 
     @Test
+    public void shouldNotFailWhenNoIgnoreFile() throws Exception {
+        // given
+        System.setProperty(RESTSpecLRValidator.ENV_PREF + "rest.spec.path", "src/test/resources/yamls2");
+        CommandExecutor cmdIss = mock(CommandExecutor.class);
+        RESTClient restClient = mock(RESTClient.class);
+        HttpMethod getHTTPMethod = mock(HttpMethod.class);
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, null, new SwaggerBuilder() {
+            protected String getPublicInterfaceSpecDir() {
+                return "yamls2" + File.separator;
+            }
+        });
+
+        given(cmdIss.compare(anyString(), anyString())).willAnswer(compareAnswer());
+        given(cmdIss.convert(anyString(), anyString())).willAnswer(convertAnswer());
+        given(restClient.executeMethod(any(HttpMethod.class))).willReturn(RESTSpecLRValidator.HTTP_OK);
+        given(restClient.createGetMethod(anyString())).willReturn(getHTTPMethod);
+        given(getHTTPMethod.getResponseBodyAsString()).willReturn("swagger: 2.0");
+
+        // when
+        restSpecLRValidator.checkIfRestIsBackwardCompatible();
+
+        // then
+        // no exception, one verification
+    }
+
+    @Test
     public void checkIfRestIsBackwardCompatibleFilteredSpecs() throws Exception {
         // given
         CommandExecutor cmdIss = mock(CommandExecutor.class);
@@ -85,6 +110,7 @@ public class RESTSpecLRValidatorTest {
         assertThat(processedFilesPaths).doesNotContain("/spec1_2.yml");
         assertThat(processedFilesPaths).doesNotContain("/spec1_3.yml");
         assertThat(processedFilesPaths).doesNotContain("/spec2_2.yml");
+        assertThat(processedFilesPaths).doesNotContain("/ignored.yml");
     }
 
     @Test
@@ -147,6 +173,8 @@ public class RESTSpecLRValidatorTest {
         assertThat(processedFilesPaths).contains("/subApi1/spec1_3.yml");
         assertThat(processedFilesPaths).contains("/subApi1/spec1_2.yml");
         assertThat(processedFilesPaths).contains("/subApi2/spec2_1.yml");
+        assertThat(processedFilesPaths).doesNotContain("/ignored/");
+        assertThat(processedFilesPaths).doesNotContain("ignored.yml");
     }
 
     @Test(expected = RESTsNotCompatibleException.class)
@@ -207,31 +235,24 @@ public class RESTSpecLRValidatorTest {
         restSpecLRValidator.checkIfRestIsBackwardCompatible();
 
         // then
-        final String producedUrls = restClient.getPassedUrls().stream().collect(Collectors.joining(" "));
         assertThat(execs).hasSize(ALL_SPECS_COUNT);
     }
 
     private Answer<Process> compareAnswer() {
-        return new Answer<Process>() {
-            @Override
-            public Process answer(InvocationOnMock invocationOnMock) throws Throwable {
-                String temporaryJson = invocationOnMock.getArgumentAt(0, String.class);
-                String sourceFilePath = invocationOnMock.getArgumentAt(1, String.class);
-                execs.add("temporaryJson = '" + temporaryJson + "', sourceFilePath = '" + sourceFilePath + "'");
-                return process;
-            }
+        return invocationOnMock -> {
+            String temporaryJson = invocationOnMock.getArgumentAt(0, String.class);
+            String sourceFilePath = invocationOnMock.getArgumentAt(1, String.class);
+            execs.add("temporaryJson = '" + temporaryJson + "', sourceFilePath = '" + sourceFilePath + "'");
+            return process;
         };
     }
 
     private Answer<File> convertAnswer() {
-        return new Answer<File>() {
-            @Override
-            public File answer(InvocationOnMock invocation) throws Throwable {
-                String convertedFilePath = invocation.getArgumentAt(0, String.class);
-                String outputDir = invocation.getArgumentAt(1, String.class);
+        return invocation -> {
+            String convertedFilePath = invocation.getArgumentAt(0, String.class);
+            String outputDir = invocation.getArgumentAt(1, String.class);
 
-                return new File(outputDir + File.separator + CommandExecutor.DEFAULT_SWAGGER_YAML);
-            }
+            return new File(outputDir + File.separator + CommandExecutor.DEFAULT_SWAGGER_YAML);
         };
     }
 

@@ -16,7 +16,7 @@ while [ "$1" != "" ]; do
                 ;;
             "-f")
                 shift
-                echo "Unknown filter $1"
+                echo "REST filter is $1"
                 FILTER=$1
                 ;;
             *)

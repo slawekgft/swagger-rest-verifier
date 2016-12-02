@@ -15,12 +15,12 @@ If you build from sources:
 Location is injected as in this example (use `lombard.risk.rest.spec.path` env var):
 * > `./checkFacadeRESTs.sh -s git@git.gft.com:ac/rest-contract.agile-collateral.git -u http://localhost:9000/api`
 or
-* > './checkFacadeRESTs.sh -s /src/LR/facade-contracts -u http://localhost:9000/api'
+* > `./checkFacadeRESTs.sh -s /src/LR/facade-contracts -u http://localhost:9000/api`
 * > mvn clean package
 * > cd target
 * > rm swagger-rest-validator-\<ver\>.jar
 
-Also there must be swagger-diff installed in local machine:
+Also there must be swagger-diff installed on local machine:
 * > apt-get install --assume-yes ruby
 * > gem install swagger-diff
 
@@ -28,6 +28,9 @@ Add `-f login` if you want to check only `login` api. Controllers must have prop
 See examples in Facade `routes` file.
 
 All interfaces described by found *.yml, *.yaml files will be processed.
+
+Edit .validatorignore (in rest contracts project root) by adding lines with path elements
+of files/directories witch should not be verified. Special signs are not supported!
 
 # Output
 In case of any problem with interface compatibility script will produce exit code = 1. Set `REST_VERIFIER_LOG` variable to indicate where to direct verification report. The default is `./verifier.log`.
