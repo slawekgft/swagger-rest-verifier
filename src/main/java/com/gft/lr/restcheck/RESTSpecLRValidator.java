@@ -33,6 +33,7 @@ public class RESTSpecLRValidator {
     public static final int SEARCH_DEPTH_IS_2 = 2;
     public static final Character URL_SEPARATOR = '/';
     public static final String WRONG_SERVER_RESPONSE = "Wrong server response: ";
+    public static final String SWAGGER_NOT_VALID = "is not a valid Swagger specification";
 
     final static Set<String> IGNORED_PATHS = new HashSet<>();
     public static final String VALIDATORIGNORE = ".validatorignore";
@@ -124,12 +125,16 @@ public class RESTSpecLRValidator {
             String message = join("\n", getStringFromStream(stdInput), errors);
             outBuffer.append(message);
             log.info("Comparing tool output:\n" + message);
-
-            return process.exitValue() == 0;
+            ;
+            return checkValidationStatus(process, message);
         } catch (InterruptedException e) {
             log.error(e.getMessage(), e);
             throw new IOException(e);
         }
+    }
+
+    private boolean checkValidationStatus(Process process, String message) {
+        return !message.contains(SWAGGER_NOT_VALID) && process.exitValue() == 0;
     }
 
     private String getStringFromStream(BufferedReader stdInput) throws IOException {

@@ -8,8 +8,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,11 +31,10 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class RESTSpecLRValidatorTest {
 
-    public static final Logger log = LoggerFactory.getLogger(RESTSpecLRValidatorTest.class);
-
     public static final String FILTER_URL = "_1";
     public static final int SPECS_THAT_MATCH_COUNT = 3;
     public static final int ALL_SPECS_COUNT = 5;
+    public static final byte[] BUF_FOR_MESSAGE_INVALID = RESTSpecLRValidator.SWAGGER_NOT_VALID.getBytes();
     public static final byte[] BUF_FOR_MESSAGE = "abc".getBytes();
     public static final byte[] EMPTY_BUF = {};
     public static final int HTTP_NOT_FOUND = 404;
@@ -140,6 +137,45 @@ public class RESTSpecLRValidatorTest {
         assertThat(swaggerResource.getError()).contains(RESTSpecLRValidator.WRONG_SERVER_RESPONSE);
         verify(cmdIss, never()).compare(anyString(), anyString());
         verify(cmdIss, never()).convert(anyString(), anyString());
+    }
+
+    @Test(expected = RESTsNotCompatibleException.class)
+    public void checkIfErrorIfRestNotSwaggerJSonStdOut() throws IOException, RESTsNotCompatibleException {
+        // given
+        RESTSpecLRValidator restSpecLRValidator = prepareMocksForVerificationStatusTest(BUF_FOR_MESSAGE, BUF_FOR_MESSAGE_INVALID);
+
+        // when
+        restSpecLRValidator.checkIfRestIsBackwardCompatible();
+
+        // then
+        // exception
+    }
+
+    @Test(expected = RESTsNotCompatibleException.class)
+    public void checkIfErrorIfRestNotSwaggerJSonErrOut() throws IOException, RESTsNotCompatibleException {
+        // given
+        RESTSpecLRValidator restSpecLRValidator = prepareMocksForVerificationStatusTest(BUF_FOR_MESSAGE_INVALID, BUF_FOR_MESSAGE);
+
+        // when
+        restSpecLRValidator.checkIfRestIsBackwardCompatible();
+
+        // then
+        // exception
+    }
+
+    private RESTSpecLRValidator prepareMocksForVerificationStatusTest(byte[] bufForMessageErr, byte[] bufForMessageStd) throws IOException {
+        CommandExecutor cmdIss = mock(CommandExecutor.class);
+        HttpMethod getHTTPMethod = mock(HttpMethod.class);
+        MockRESTClient restClient = new MockRESTClient(RESTSpecLRValidator.HTTP_OK, getHTTPMethod);
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, new SwaggerBuilder());
+        given(process.getErrorStream()).willReturn(new ByteArrayInputStream(bufForMessageErr));
+        given(process.getInputStream()).willReturn(new ByteArrayInputStream(bufForMessageStd));
+        given(process.exitValue()).willReturn(0);
+
+        given(cmdIss.compare(anyString(), anyString())).willAnswer(compareAnswer());
+        given(cmdIss.convert(anyString(), anyString())).willAnswer(convertAnswer());
+        given(getHTTPMethod.getResponseBodyAsString()).willReturn("swagger: 2.0");
+        return restSpecLRValidator;
     }
 
     @Test
