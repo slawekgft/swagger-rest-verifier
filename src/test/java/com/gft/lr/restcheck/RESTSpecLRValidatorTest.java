@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.gft.lr.restcheck.RESTSpecLRValidator.SWAGGER_NOT_VALID;
 import static com.gft.lt.test.TestUtil.sysProp;
 import static org.fest.assertions.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -34,8 +35,18 @@ public class RESTSpecLRValidatorTest {
     public static final String FILTER_URL = "_1";
     public static final int SPECS_THAT_MATCH_COUNT = 3;
     public static final int ALL_SPECS_COUNT = 5;
-    public static final byte[] BUF_FOR_MESSAGE_INVALID = RESTSpecLRValidator.SWAGGER_NOT_VALID.getBytes();
-    public static final byte[] BUF_FOR_MESSAGE = "abc".getBytes();
+    public static final byte[] BUF_FOR_MESSAGE_INVALID = SWAGGER_NOT_VALID.getBytes();
+    public static final byte[] BUF_FOR_MESSAGE_WRONG_PROP
+            = getWrongYMLSpec("feeds/securities").getBytes();
+
+    private static String getWrongYMLSpec(final String endpointName) {
+        return SWAGGER_NOT_VALID
+                + "\n\nThe property '#/paths//" + endpointName + "' contains additional "
+                + "properties [\"websocket-response\"] outside of the schema when none are allowed "
+                + "in schema http://swagger.io/v2/schema.json#";
+    }
+
+    public static final byte[] BUF_FOR_MESSAGE = "some info".getBytes();
     public static final byte[] EMPTY_BUF = {};
     public static final int HTTP_NOT_FOUND = 404;
 
@@ -111,7 +122,7 @@ public class RESTSpecLRValidatorTest {
     }
 
     @Test
-    public void checkIfErrorIfRestNotAwailableSpecs() throws IOException {
+    public void shouldCheckIfErrorIfRestNotAwailableSpecs() throws IOException {
         // given
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         RESTClient restClient = mock(RESTClient.class);
@@ -140,9 +151,10 @@ public class RESTSpecLRValidatorTest {
     }
 
     @Test(expected = RESTsNotCompatibleException.class)
-    public void checkIfErrorIfRestNotSwaggerJSonStdOut() throws IOException, RESTsNotCompatibleException {
+    public void shouldCheckIfErrorIfRestNotSwaggerJSonStdOut() throws IOException, RESTsNotCompatibleException {
         // given
-        RESTSpecLRValidator restSpecLRValidator = prepareMocksForVerificationStatusTest(BUF_FOR_MESSAGE, BUF_FOR_MESSAGE_INVALID);
+        RESTSpecLRValidator restSpecLRValidator =
+                prepareMocksForVerificationStatusTest(BUF_FOR_MESSAGE, BUF_FOR_MESSAGE_INVALID);
 
         // when
         restSpecLRValidator.checkIfRestIsBackwardCompatible();
@@ -152,9 +164,23 @@ public class RESTSpecLRValidatorTest {
     }
 
     @Test(expected = RESTsNotCompatibleException.class)
-    public void checkIfErrorIfRestNotSwaggerJSonErrOut() throws IOException, RESTsNotCompatibleException {
+    public void shouldCheckIfErrorIfRestNotSwaggerJSonErrOut() throws IOException, RESTsNotCompatibleException {
         // given
-        RESTSpecLRValidator restSpecLRValidator = prepareMocksForVerificationStatusTest(BUF_FOR_MESSAGE_INVALID, BUF_FOR_MESSAGE);
+        RESTSpecLRValidator restSpecLRValidator =
+                prepareMocksForVerificationStatusTest(BUF_FOR_MESSAGE_INVALID, BUF_FOR_MESSAGE);
+
+        // when
+        restSpecLRValidator.checkIfRestIsBackwardCompatible();
+
+        // then
+        // exception
+    }
+
+    @Test(expected = RESTsNotCompatibleException.class)
+    public void shouldCheckIfErrorIfRestNotSwaggerJSon() throws IOException, RESTsNotCompatibleException {
+        // given
+        RESTSpecLRValidator restSpecLRValidator =
+                prepareMocksForVerificationStatusTest(BUF_FOR_MESSAGE_WRONG_PROP, BUF_FOR_MESSAGE);
 
         // when
         restSpecLRValidator.checkIfRestIsBackwardCompatible();
@@ -179,7 +205,7 @@ public class RESTSpecLRValidatorTest {
     }
 
     @Test
-    public void checkIfRestIsBackwardCompatibleAllSpecs() throws Exception {
+    public void shouldCheckIfRestIsBackwardCompatibleAllSpecs() throws Exception {
         // given
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         HttpMethod getHTTPMethod = mock(HttpMethod.class);
@@ -214,7 +240,7 @@ public class RESTSpecLRValidatorTest {
     }
 
     @Test(expected = RESTsNotCompatibleException.class)
-    public void checkIfRestIsNOTBackwardCompatibleAllSpecsWithSomeOutput() throws Exception {
+    public void shouldCheckIfRestIsNOTBackwardCompatibleAllSpecsWithSomeOutput() throws Exception {
         // given
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         HttpMethod getHTTPMethod = mock(HttpMethod.class);
@@ -235,7 +261,7 @@ public class RESTSpecLRValidatorTest {
     }
 
     @Test(expected = RESTsNotCompatibleException.class)
-    public void checkIfRestIsNOTBackwardCompatibleAllSpecsWithNoOutput() throws Exception {
+    public void shouldCheckIfRestIsNOTBackwardCompatibleAllSpecsWithNoOutput() throws Exception {
         // given
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         HttpMethod getHTTPMethod = mock(HttpMethod.class);
@@ -254,7 +280,7 @@ public class RESTSpecLRValidatorTest {
     }
 
     @Test
-    public void checkIfRestIsBackwardCompatibleAllSpecsWithSomeOutput() throws Exception {
+    public void shouldCheckIfRestIsBackwardCompatibleAllSpecsWithSomeOutput() throws Exception {
         // given
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         HttpMethod getHTTPMethod = mock(HttpMethod.class);

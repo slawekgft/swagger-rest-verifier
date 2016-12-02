@@ -125,7 +125,6 @@ public class RESTSpecLRValidator {
             String message = join("\n", getStringFromStream(stdInput), errors);
             outBuffer.append(message);
             log.info("Comparing tool output:\n" + message);
-            ;
             return checkValidationStatus(process, message);
         } catch (InterruptedException e) {
             log.error(e.getMessage(), e);
