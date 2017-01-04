@@ -58,6 +58,7 @@ java -Dlr.restwatch.rest.spec.path=/tmp -Dlr.restwatch.url=$FACADE_URL -jar swag
 
 EXIT_STATUS=$?
 echo "Exit status is $EXIT_STATUS"
+cat ./verifier.log
 
 rm -rf /tmp/yamls
 
