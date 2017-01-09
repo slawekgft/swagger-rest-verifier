@@ -57,7 +57,10 @@ public class RESTSpecLRValidator {
     }
 
     public void checkIfRestIsBackwardCompatible() throws IOException, RESTsNotCompatibleException {
-        final Collection<SwaggerResource> swaggerResources = prepareJSons(filterSwaggers(prepareSwaggers()));
+        final Collection<SwaggerResource> swaggerResources = prepareJSons(filterSwaggers(
+                swaggerBuilder.prepareSwaggers(
+                        path -> getPathsOf(path),
+                        path -> notIgnored(path))));
         final Collection<SwaggerResource> problematicJSons = new ArrayList<>();
 
         swaggerResources.stream().filter(SwaggerResource::valid).forEach(swaggerResource -> validate(problematicJSons, swaggerResource));
@@ -66,6 +69,15 @@ public class RESTSpecLRValidator {
         if (CollectionUtils.isNotEmpty(problematicJSons)) {
             throw new RESTsNotCompatibleException(problematicJSons);
         }
+    }
+
+    private Stream<Path> getPathsOf(String path) {
+        try {
+            return Files.walk(Paths.get(path), SEARCH_DEPTH_IS_2);
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+        return Collections.<Path>emptyList().stream();
     }
 
     private void validate(Collection<SwaggerResource> problematicJSons, SwaggerResource swaggerResource) {
@@ -177,17 +189,6 @@ public class RESTSpecLRValidator {
 
     private String jsonFormatName(String fileName) {
         return swaggerBuilder.yamlExtReplace(fileName, ".json");
-    }
-
-    private Collection<SwaggerResource> prepareSwaggers() throws IOException {
-        Stream<Path> pathStream = Files.walk(Paths.get(swaggerBuilder.getRESTSpecsRelativePath()), SEARCH_DEPTH_IS_2);
-        return pathStream
-                .filter(path -> Files.isRegularFile(path))
-                .filter(path -> notIgnored(path))
-                .filter(path -> path.getFileName().toString().toLowerCase().contains(".yml")
-                        || path.getFileName().toString().toLowerCase().contains(".yaml"))
-                .map(path -> swaggerBuilder.createSwaggerResource(path))
-                .collect(Collectors.toList());
     }
 
     private boolean notIgnored(Path path) {

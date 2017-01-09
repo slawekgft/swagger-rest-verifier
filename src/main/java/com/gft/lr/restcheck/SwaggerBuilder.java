@@ -1,9 +1,19 @@
 package com.gft.lr.restcheck;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.StringUtils.strip;
 
@@ -12,11 +22,13 @@ import static org.apache.commons.lang3.StringUtils.strip;
  */
 public class SwaggerBuilder {
 
+    public static final Logger log = LoggerFactory.getLogger(SwaggerBuilder.class);
+
     public static final String PUBLIC_INTERFACESPEC_DIR = "yamls" + File.separator;
     public static final String SWAGGER_API_DOCS_URL_ENV = System.getProperty(RESTSpecLRValidator.ENV_PREF + "url")
             .trim().replaceFirst("/$", "") + "/{filename}.json";
 
-    public SwaggerResource createSwaggerResource(Path path) {
+    private SwaggerResource createSwaggerResource(Path path) {
         final String optionalPrefix;
         {
             String prefixTmp =
@@ -32,6 +44,17 @@ public class SwaggerBuilder {
                 path.getFileName().toString(),
                 optionalPrefix,
                 getApiUrl(path.getFileName().toString(), optionalPrefix));
+    }
+
+    public Collection<SwaggerResource> prepareSwaggers(Function<String, Stream<Path>> getPaths, Predicate<Path> notIgnored) throws IOException {
+        Stream<Path> pathStream = getPaths.apply(getRESTSpecsRelativePath());
+        return pathStream
+                .filter(path -> Files.isRegularFile(path))
+                .filter(path -> notIgnored.test(path))
+                .filter(path -> path.getFileName().toString().toLowerCase().contains(".yml")
+                        || path.getFileName().toString().toLowerCase().contains(".yaml"))
+                .map(path -> createSwaggerResource(path))
+                .collect(Collectors.toList());
     }
 
     public String yamlExtReplace(String fileName, String replacement) {

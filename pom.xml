@@ -4,7 +4,7 @@
 
     <groupId>lombardrisk</groupId>
     <artifactId>swagger-rest-validator</artifactId>
-    <version>1.3</version>
+    <version>1.4-snapshot</version>
     <packaging>jar</packaging>
     <name>REST specs validator of Swagger API</name>
     <url>http://maven.apache.org</url>
