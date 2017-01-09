@@ -36,7 +36,6 @@ public class RESTSpecLRValidator {
     public static final String SWAGGER_NOT_VALID = "is not a valid Swagger specification";
 
     final static Set<String> IGNORED_PATHS = new HashSet<>();
-    public static final String VALIDATORIGNORE = ".validatorignore";
 
     private CommandExecutor commandExecutor;
     private String filterUrl;
@@ -48,7 +47,7 @@ public class RESTSpecLRValidator {
         this.restClient = restClient;
         this.swaggerBuilder = swaggerBuilder;
 
-        initializeConfiguration();
+        IGNORED_PATHS.addAll(RESTVerifierConfUtil.readIngnoreConfiguration(swaggerBuilder.getRESTSpecsRelativePath() + RESTVerifierConfUtil.VALIDATORIGNORE));
     }
 
     public RESTSpecLRValidator(CommandExecutor commandExecutor, RESTClient restClient, String filterUrl, SwaggerBuilder swaggerBuilder) {
@@ -71,7 +70,7 @@ public class RESTSpecLRValidator {
         }
     }
 
-    private Stream<Path> getPathsOf(String path) {
+    public static Stream<Path> getPathsOf(String path) {
         try {
             return Files.walk(Paths.get(path), SEARCH_DEPTH_IS_2);
         } catch (IOException e) {
@@ -191,7 +190,7 @@ public class RESTSpecLRValidator {
         return swaggerBuilder.yamlExtReplace(fileName, ".json");
     }
 
-    private boolean notIgnored(Path path) {
+    public static boolean notIgnored(Path path) {
         for (String ignoredPath : IGNORED_PATHS) {
             if (path.toString().contains(ignoredPath)) {
                 log.info("Ignored path: " + path);
@@ -218,24 +217,6 @@ public class RESTSpecLRValidator {
         }).collect(Collectors.toList());
 
         return jsonsSwaggers;
-    }
-
-    private void initializeConfiguration() {
-        final String ignorePath = swaggerBuilder.getRESTSpecsRelativePath() + VALIDATORIGNORE;
-        if (new File(ignorePath).exists()) {
-            try (InputStream inputStream
-                         = new FileInputStream(ignorePath)) {
-                if (null != inputStream) {
-                    final LineNumberReader ignoredReader = new LineNumberReader(new InputStreamReader(inputStream));
-                    String line;
-                    while ((line = ignoredReader.readLine()) != null) {
-                        IGNORED_PATHS.add(line);
-                    }
-                }
-            } catch (IOException e) {
-                log.error(e.getMessage(), e);
-            }
-        }
     }
 
 }
