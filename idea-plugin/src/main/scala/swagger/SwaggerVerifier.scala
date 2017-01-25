@@ -1,4 +1,4 @@
-package com.gft.swagger
+package swagger
 
 /**
   * Created on 09/01/17.
