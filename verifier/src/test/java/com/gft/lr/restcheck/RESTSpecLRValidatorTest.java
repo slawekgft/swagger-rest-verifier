@@ -13,9 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.gft.lr.restcheck.RESTSpecLRValidator.SWAGGER_NOT_VALID;
@@ -55,11 +53,16 @@ public class RESTSpecLRValidatorTest {
     @Mock
     private Process process;
 
+    @Mock
+    private RESTVerifierConf restVerifierConf;
+
     @Before
     public void setUp() {
         execs = Collections.synchronizedList(new ArrayList<>());
         System.setProperty(RESTSpecLRValidator.ENV_PREF + "rest.spec.path", "src/test/resources");
         System.setProperty(getUrlPropName(), "http://localhost:9000/rest/");
+        given(restVerifierConf.readIngnoreConfiguration(anyString()))
+                .willReturn(new HashSet<>(Arrays.asList("ignored/")));
         given(process.getOutputStream()).willReturn(new ByteArrayOutputStream());
         given(process.getErrorStream()).willReturn(new ByteArrayInputStream(EMPTY_BUF));
         given(process.getInputStream()).willReturn(new ByteArrayInputStream(EMPTY_BUF));
@@ -76,7 +79,7 @@ public class RESTSpecLRValidatorTest {
             protected String getPublicInterfaceSpecDir() {
                 return "yamls2" + File.separator;
             }
-        });
+        }, restVerifierConf);
 
         given(cmdIss.compare(anyString(), anyString())).willAnswer(compareAnswer());
         given(cmdIss.convert(anyString(), anyString())).willAnswer(convertAnswer());
@@ -97,7 +100,8 @@ public class RESTSpecLRValidatorTest {
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         RESTClient restClient = mock(RESTClient.class);
         HttpMethod getHTTPMethod = mock(HttpMethod.class);
-        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, FILTER_URL, new SwaggerBuilder());
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(
+                cmdIss, restClient, FILTER_URL, new SwaggerBuilder(), restVerifierConf);
 
         given(cmdIss.compare(anyString(), anyString())).willAnswer(compareAnswer());
         given(cmdIss.convert(anyString(), anyString())).willAnswer(convertAnswer());
@@ -127,7 +131,8 @@ public class RESTSpecLRValidatorTest {
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         RESTClient restClient = mock(RESTClient.class);
         HttpMethod getHTTPMethod = mock(HttpMethod.class);
-        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, "spec0_1", new SwaggerBuilder());
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(
+                cmdIss, restClient, "spec0_1", new SwaggerBuilder(), restVerifierConf);
 
         given(restClient.executeMethod(any(HttpMethod.class))).willReturn(HTTP_NOT_FOUND);
         given(restClient.createGetMethod(anyString())).willReturn(getHTTPMethod);
@@ -193,7 +198,8 @@ public class RESTSpecLRValidatorTest {
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         HttpMethod getHTTPMethod = mock(HttpMethod.class);
         MockRESTClient restClient = new MockRESTClient(RESTSpecLRValidator.HTTP_OK, getHTTPMethod);
-        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, new SwaggerBuilder());
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(
+                cmdIss, restClient, new SwaggerBuilder(), restVerifierConf);
         given(process.getErrorStream()).willReturn(new ByteArrayInputStream(bufForMessageErr));
         given(process.getInputStream()).willReturn(new ByteArrayInputStream(bufForMessageStd));
         given(process.exitValue()).willReturn(0);
@@ -210,7 +216,8 @@ public class RESTSpecLRValidatorTest {
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         HttpMethod getHTTPMethod = mock(HttpMethod.class);
         MockRESTClient restClient = new MockRESTClient(RESTSpecLRValidator.HTTP_OK, getHTTPMethod);
-        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, new SwaggerBuilder());
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(
+                cmdIss, restClient, new SwaggerBuilder(), restVerifierConf);
 
         given(cmdIss.compare(anyString(), anyString())).willAnswer(compareAnswer());
         given(cmdIss.convert(anyString(), anyString())).willAnswer(convertAnswer());
@@ -245,7 +252,8 @@ public class RESTSpecLRValidatorTest {
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         HttpMethod getHTTPMethod = mock(HttpMethod.class);
         MockRESTClient restClient = new MockRESTClient(RESTSpecLRValidator.HTTP_OK, getHTTPMethod);
-        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, new SwaggerBuilder());
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(
+                cmdIss, restClient, new SwaggerBuilder(), restVerifierConf);
         given(process.getErrorStream()).willReturn(new ByteArrayInputStream(BUF_FOR_MESSAGE));
         given(process.getInputStream()).willReturn(new ByteArrayInputStream(BUF_FOR_MESSAGE));
         given(process.exitValue()).willReturn(1);
@@ -266,7 +274,8 @@ public class RESTSpecLRValidatorTest {
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         HttpMethod getHTTPMethod = mock(HttpMethod.class);
         MockRESTClient restClient = new MockRESTClient(RESTSpecLRValidator.HTTP_OK, getHTTPMethod);
-        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, new SwaggerBuilder());
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(
+                cmdIss, restClient, new SwaggerBuilder(), restVerifierConf);
         given(process.exitValue()).willReturn(1);
 
         given(cmdIss.compare(anyString(), anyString())).willAnswer(compareAnswer());
@@ -285,7 +294,8 @@ public class RESTSpecLRValidatorTest {
         CommandExecutor cmdIss = mock(CommandExecutor.class);
         HttpMethod getHTTPMethod = mock(HttpMethod.class);
         MockRESTClient restClient = new MockRESTClient(RESTSpecLRValidator.HTTP_OK, getHTTPMethod);
-        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(cmdIss, restClient, new SwaggerBuilder());
+        RESTSpecLRValidator restSpecLRValidator = new RESTSpecLRValidator(
+                cmdIss, restClient, new SwaggerBuilder(), restVerifierConf);
         given(process.getErrorStream()).willReturn(new ByteArrayInputStream(BUF_FOR_MESSAGE));
         given(process.getInputStream()).willReturn(new ByteArrayInputStream(BUF_FOR_MESSAGE));
 
@@ -311,7 +321,6 @@ public class RESTSpecLRValidatorTest {
 
     private Answer<File> convertAnswer() {
         return invocation -> {
-            String convertedFilePath = invocation.getArgumentAt(0, String.class);
             String outputDir = invocation.getArgumentAt(1, String.class);
 
             return new File(outputDir + File.separator + CommandExecutor.DEFAULT_SWAGGER_YAML);

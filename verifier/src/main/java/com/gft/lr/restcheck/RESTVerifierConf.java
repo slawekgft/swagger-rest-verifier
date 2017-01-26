@@ -10,14 +10,14 @@ import java.util.Set;
 /**
  * Created on 09/01/17.
  */
-public class RESTVerifierConfUtil {
-    public static final Logger log = LoggerFactory.getLogger(RESTVerifierConfUtil.class);
+public class RESTVerifierConf {
+    public static final Logger log = LoggerFactory.getLogger(RESTVerifierConf.class);
 
     public static final String VALIDATORIGNORE = ".validatorignore";
 
-    private RESTVerifierConfUtil() {}
+    RESTVerifierConf() {}
 
-    public static Set<String> readIngnoreConfiguration(final String ignorePath) {
+    public Set<String> readIngnoreConfiguration(final String ignorePath) {
         final Set<String> ignoredPaths = new HashSet<>();
         if (new File(ignorePath).exists()) {
             try (InputStream inputStream

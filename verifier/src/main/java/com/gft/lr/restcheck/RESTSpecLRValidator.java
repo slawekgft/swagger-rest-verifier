@@ -42,16 +42,23 @@ public class RESTSpecLRValidator {
     private SwaggerBuilder swaggerBuilder;
     private RESTClient restClient;
 
-    public RESTSpecLRValidator(CommandExecutor commandExecutor, RESTClient restClient, SwaggerBuilder swaggerBuilder) {
+    public RESTSpecLRValidator(CommandExecutor commandExecutor,
+                               RESTClient restClient,
+                               SwaggerBuilder swaggerBuilder,
+                               RESTVerifierConf restVerifierConf) {
         this.commandExecutor = commandExecutor;
         this.restClient = restClient;
         this.swaggerBuilder = swaggerBuilder;
 
-        IGNORED_PATHS.addAll(RESTVerifierConfUtil.readIngnoreConfiguration(swaggerBuilder.getRESTSpecsRelativePath() + RESTVerifierConfUtil.VALIDATORIGNORE));
+        IGNORED_PATHS.addAll(restVerifierConf.readIngnoreConfiguration(swaggerBuilder.getRESTSpecsRelativePath() + RESTVerifierConf.VALIDATORIGNORE));
     }
 
-    public RESTSpecLRValidator(CommandExecutor commandExecutor, RESTClient restClient, String filterUrl, SwaggerBuilder swaggerBuilder) {
-        this(commandExecutor, restClient, swaggerBuilder);
+    public RESTSpecLRValidator(CommandExecutor commandExecutor,
+                               RESTClient restClient,
+                               String filterUrl,
+                               SwaggerBuilder swaggerBuilder,
+                               RESTVerifierConf restVerifierConf) {
+        this(commandExecutor, restClient, swaggerBuilder, restVerifierConf);
         this.filterUrl = filterUrl;
     }
 
@@ -62,8 +69,12 @@ public class RESTSpecLRValidator {
                         path -> notIgnored(path))));
         final Collection<SwaggerResource> problematicJSons = new ArrayList<>();
 
-        swaggerResources.stream().filter(SwaggerResource::valid).forEach(swaggerResource -> validate(problematicJSons, swaggerResource));
-        problematicJSons.addAll(swaggerResources.stream().filter((swaggerResource) -> !swaggerResource.valid()).collect(Collectors.toList()));
+        swaggerResources.stream()
+                .filter(SwaggerResource::valid)
+                .forEach(swaggerResource -> validate(problematicJSons, swaggerResource));
+        problematicJSons.addAll(swaggerResources.stream()
+                .filter((swaggerResource) -> !swaggerResource.valid())
+                .collect(Collectors.toList()));
 
         if (CollectionUtils.isNotEmpty(problematicJSons)) {
             throw new RESTsNotCompatibleException(problematicJSons);
@@ -115,7 +126,9 @@ public class RESTSpecLRValidator {
 
     private Collection<SwaggerResource> filterSwaggers(Collection<SwaggerResource> swaggerResources) {
         if (StringUtils.isNotBlank(getFilterSwaggerUrl())) {
-            return swaggerResources.stream().filter(swaggerResource -> swaggerResource.getUrl().contains(getFilterSwaggerUrl())).collect(Collectors.toList());
+            return swaggerResources.stream()
+                    .filter(swaggerResource -> swaggerResource.getUrl().contains(getFilterSwaggerUrl()))
+                    .collect(Collectors.toList());
         }
 
         return swaggerResources;

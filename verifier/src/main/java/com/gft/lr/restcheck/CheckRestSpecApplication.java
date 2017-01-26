@@ -11,10 +11,14 @@ public class CheckRestSpecApplication {
     public static void main(String[] args) {
         try {
             String filterUrl = args.length > 0 ? args[0] : "";
-            new RESTSpecLRValidator(new CommandExecutor(new RuntimeExecutor()), new RESTClientImpl(), filterUrl, new SwaggerBuilder()).checkIfRestIsBackwardCompatible();
+            new RESTSpecLRValidator(
+                    new CommandExecutor(new RuntimeExecutor()),
+                    new RESTClientImpl(),
+                    filterUrl,
+                    new SwaggerBuilder(),
+                    new RESTVerifierConf()).checkIfRestIsBackwardCompatible();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
-            System.err.print(e.getMessage());
             System.exit(1);
         } catch (RESTsNotCompatibleException e) {
             System.err.print(e.getMessage());
