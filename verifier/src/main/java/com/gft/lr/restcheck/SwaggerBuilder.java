@@ -1,8 +1,6 @@
 package com.gft.lr.restcheck;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,8 +18,6 @@ import static org.apache.commons.lang3.StringUtils.strip;
  * Created on 04/11/16.
  */
 public class SwaggerBuilder {
-
-    public static final Logger log = LoggerFactory.getLogger(SwaggerBuilder.class);
 
     public static final String PUBLIC_INTERFACESPEC_DIR = "yamls" + File.separator;
     public static final String SWAGGER_API_DOCS_URL_ENV = System.getProperty(RESTSpecLRValidator.ENV_PREF + "url")

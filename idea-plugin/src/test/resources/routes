@@ -1,0 +1,85 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET    /api-docs.json                           controllers.ApiHelpController.getResources
+
+GET    /swagger                                 controllers.SwaggerController.indexSwagger
+
+#Administration
+POST   /adminrest/loglevel                      controllers.AdministrationController.changeLogLevel
+GET    /adminrest/loglevel                      controllers.AdministrationController.getLogLevels
+
+#API
+
+# Swagger API paths
+# Paths here must reflect local path of the *.yaml file in contracts project directory i.e.: '/api/login.json' -> '<contracts.project.base>/login.yaml'.
+# getResource path arguments aggregates all paths which starts with given string. i.e.: '/log' maps to '/login' and '/logout'.
+GET    /api/login.json                          controllers.ApiHelpController.getResource(path = "/log")
+GET    /api/user/user.json                      controllers.ApiHelpController.getResource(path = "/user")
+GET    /api/metadata/meta.json                  controllers.ApiHelpController.getResource(path = "/metadata")
+GET    /api/metadata/user/roles/roles.json      controllers.ApiHelpController.getResource(path = "/rest/metadata/user/roles")
+GET    /api/approvals/approval_manager.json     controllers.ApiHelpController.getResource(path = "/approvals")
+GET    /api/feeds/feeds.json                    controllers.ApiHelpController.getResource(path = "/feeds")
+GET    /api/exposure-manager/exposure_manager.json                    controllers.ApiHelpController.getResource(path = "/exposure-manager")
+
+#Health check
+GET    /rest/facade-health-check                controllers.HealthCheckController.checkFacadeHealth
+
+# Home page
+POST   /rest/login                              controllers.LoginController.login
+POST   /rest/logout                             controllers.LoginController.logout
+
+# Metadata
+GET    /rest/metadata/collateral/regions        controllers.MetadataController.getAllCollateralRegionsList
+GET    /rest/metadata/collateral/groups         controllers.MetadataController.getAllCollateralGroupsList
+GET    /rest/metadata/collateral/categories     controllers.MetadataController.getAllCollateralCategoriesList
+GET    /rest/metadata/business-lines            controllers.MetadataController.getAllBusinessLinesList
+GET    /rest/metadata/limit/roles               controllers.MetadataController.getAllAvailableApprovalProfilesList
+GET    /rest/metadata/user/roles                controllers.UserRolesController.listAll
+
+# WebSocket
+GET    /rest/ws                                 controllers.WebSocketController.ws
+
+# User
+POST   /rest/user                               controllers.UserController.addUser
+PUT    /rest/user                               controllers.UserController.updateUser
+GET    /rest/user/:userName                     controllers.UserController.getUser(userName: String)
+GET    /rest/users/summary                      controllers.UsersController.getUserSummary
+
+
+#Feeds
+POST   /rest/feeds/market-data                  controllers.FeedUploadController.marketData
+POST   /rest/feeds/organisations                controllers.FeedUploadController.organisations
+POST   /rest/feeds/securities                   controllers.FeedUploadController.securities
+
+# Approvals
+GET    /rest/approvals/organisations            controllers.ApprovalsController.getOrganisationsRequiringApprovals
+POST   /rest/approvals/organisations            controllers.ApprovalsController.approveOrganisations
+GET    /rest/approvals/workflows                controllers.ApprovalsController.getWorkflowsApprovals
+POST   /rest/approvals/workflows                controllers.ApprovalsController.approveWorkflows
+GET    /rest/approvals/agreements               controllers.ApprovalsController.getAgreementsApprovals
+POST   /rest/approvals/agreements               controllers.ApprovalsController.approveAgreements
+GET    /rest/approvals/securities               controllers.ApprovalsController.getSecurityApprovals
+POST   /rest/approvals/securities               controllers.ApprovalsController.approveSecurities
+GET    /rest/approvals/statements               controllers.ApprovalsController.getStatementsApprovals
+POST   /rest/approvals/statements               controllers.ApprovalsController.approveStatements
+
+# Build info
+GET    /rest/version                            controllers.ArtifactVersionController.version
+GET    /adminrest/buildinfo                     controllers.BuildInfoController.buildInfo
+
+# Map static resources from the /public folder to the /assets URL path
+GET    /assets/*file                            controllers.Assets.versioned(path="/public", file)
+
+# Exposure manager
+GET    /rest/exposure-manager/list              controllers.ExposureManagerController.list(eventType ?= null)
+GET    /rest/exposure-manager/filters-counts    controllers.ExposureManagerController.getFiltersCounts
+POST   /rest/exposure-manager/send-letter       controllers.ExposureManagerController.sendLetter
+POST   /rest/exposure-manager/save-counterparty-amount                  controllers.ExposureManagerController.saveCounterpartyAmount
+POST   /rest/exposure-manager/book              controllers.ExposureManagerController.book
+POST   /rest/exposure-manager/search-instrument controllers.ExposureManagerController.searchInstrument
+POST   /rest/exposure-manager/get-instrument-details controllers.ExposureManagerController.getInstrumentDetails
+POST   /rest/exposure-manager/calculate/notional controllers.ExposureManagerController.calculateNotional
+POST   /rest/exposure-manager/calculate/value   controllers.ExposureManagerController.calculateValue
+POST   /rest/exposure-manager/get-details       controllers.ExposureManagerController.getBulkBookingDetails

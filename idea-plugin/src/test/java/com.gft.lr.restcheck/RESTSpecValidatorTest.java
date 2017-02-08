@@ -3,7 +3,6 @@ package com.gft.lr.restcheck;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
-import swagger.JsonPreparator;
 
 import java.io.IOException;
 import java.util.ArrayList;

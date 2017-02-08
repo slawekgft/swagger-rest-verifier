@@ -17,6 +17,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <scala.dependencies.version>2.11</scala.dependencies.version>
     </properties>
 
     <repositories>
@@ -44,6 +45,21 @@
             <groupId>lombardrisk</groupId>
             <artifactId>verifier</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-parser-combinators_2.11</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-play2-gft_2.11</artifactId>
+            <version>1.5.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.play</groupId>
+            <artifactId>play_2.11</artifactId>
+            <version>2.5.4</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

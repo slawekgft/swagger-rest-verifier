@@ -17,8 +17,8 @@ public class SwaggerResource {
         this.error = error;
     }
 
-    SwaggerResource(String source, SwaggerResource swaggerResource) {
-        this.source = source;
+    SwaggerResource(String sourceDocContent, SwaggerResource swaggerResource) {
+        this.source = sourceDocContent;
         this.fileName = swaggerResource.getFileName();
         this.fileNamePrefix = swaggerResource.getFileNamePrefix();
         this.url = swaggerResource.getUrl();
