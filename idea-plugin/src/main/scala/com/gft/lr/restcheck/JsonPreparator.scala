@@ -9,11 +9,13 @@ import play.routes.compiler.Route
 /**
   * Created on 26/01/17.
   */
-class JsonPreparator(val lifecycle: ApplicationLifecycle, val application: Application) {
+class JsonPreparator(val lifecycle: ApplicationLifecycle,
+                     val application: Application,
+                     val projectClassLoader: ClassLoader) {
 
   val swaggerPlugin: SwaggerPluginImpl = new SwaggerPluginImpl(lifecycle, null, application)
 
-  def loadClass(controllerRoute: Route) = this.getClass.getClassLoader.loadClass(
+  def loadClass(controllerRoute: Route) = this.projectClassLoader.loadClass(
       controllerRoute.call.packageName + "." + controllerRoute.call.controller)
 
   def prepareJson(swaggerResource: SwaggerResource): SwaggerResource = {
@@ -32,12 +34,9 @@ class JsonPreparator(val lifecycle: ApplicationLifecycle, val application: Appli
       case None => None
     }
 
-    println("-->" + controllerResourceUrl.get)
-
     val controllerRoute = controllerResourceUrl.getOrElse("").replaceAll("\"", "") match {
       case path => swaggerPlugin.routes
         .filter(r => r.path.toString().startsWith("rest/"))
-        //        .map(r => r.path.toString().replaceFirst("^rest", ""))
         .find(rs => {
         println("path=" + path + ", rs=" + rs.path.toString());
         rs.path.toString().contains(path)
@@ -55,5 +54,4 @@ class JsonPreparator(val lifecycle: ApplicationLifecycle, val application: Appli
       }
     }
   }
-
 }

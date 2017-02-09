@@ -39,6 +39,9 @@ public class JsonPreparatorTest {
     @Mock
     private ApplicationLifecycle lifecycle;
 
+    @Mock
+    private ClassLoader classLoader;
+
     @Before
     public void setUp() {
         ClassLoader classLoader = this.getClass().getClassLoader();
@@ -56,7 +59,7 @@ public class JsonPreparatorTest {
     @Test
     public void shouldPrepareSwaggerJson() throws Exception {
         // given
-        JsonPreparator jsonPreparator = new JsonPreparator(lifecycle, application);
+        JsonPreparator jsonPreparator = new JsonPreparator(lifecycle, application, classLoader);
         SwaggerResource swaggerResource = createSwagger(FN, FN_PREF, URL_META);
         // when
         SwaggerResource swaggerWithJson = jsonPreparator.prepareJson(swaggerResource);
