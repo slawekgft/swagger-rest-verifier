@@ -18,7 +18,7 @@ GET    /adminrest/loglevel                      controllers.AdministrationContro
 GET    /api/login.json                          controllers.ApiHelpController.getResource(path = "/log")
 GET    /api/user/user.json                      controllers.ApiHelpController.getResource(path = "/user")
 GET    /api/metadata/meta.json                  controllers.ApiHelpController.getResource(path = "/metadata")
-GET    /api/metadata/user/roles/roles.json      controllers.ApiHelpController.getResource(path = "/rest/metadata/user/roles")
+GET    /api/metadata/user/roles/roles.json      controllers.ApiHelpController.getResource(path = "/metadata/user/roles")
 GET    /api/approvals/approval_manager.json     controllers.ApiHelpController.getResource(path = "/approvals")
 GET    /api/feeds/feeds.json                    controllers.ApiHelpController.getResource(path = "/feeds")
 GET    /api/exposure-manager/exposure_manager.json                    controllers.ApiHelpController.getResource(path = "/exposure-manager")

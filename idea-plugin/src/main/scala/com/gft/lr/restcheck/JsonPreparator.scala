@@ -16,7 +16,7 @@ class JsonPreparator(val lifecycle: ApplicationLifecycle,
   val swaggerPlugin: SwaggerPluginImpl = new SwaggerPluginImpl(lifecycle, null, application)
 
   def loadClass(controllerRoute: Route) = this.projectClassLoader.loadClass(
-      controllerRoute.call.packageName + "." + controllerRoute.call.controller)
+    controllerRoute.call.packageName + "." + controllerRoute.call.controller)
 
   def prepareJson(swaggerResource: SwaggerResource): SwaggerResource = {
     val routes: List[Route] = swaggerPlugin.routes
@@ -30,28 +30,43 @@ class JsonPreparator(val lifecycle: ApplicationLifecycle,
     val controllerResourceUrl = routesOfApi
       .find(route => swaggerResource.getUrl.endsWith(route.path.toString()))
     match {
-      case Some(route) => route.call.parameters.get.head.fixed
+      case Some(route) => route.call.parameters.get.head.fixed.map(path => path.replaceAll("\"", ""))
       case None => None
     }
 
-    val controllerRoute = controllerResourceUrl.getOrElse("").replaceAll("\"", "") match {
-      case path => swaggerPlugin.routes
+    println(controllerResourceUrl)
+
+    controllerResourceUrl
+      .map(path => swaggerPlugin.routes
         .filter(r => r.path.toString().startsWith("rest/"))
         .find(rs => {
-        println("path=" + path + ", rs=" + rs.path.toString());
-        rs.path.toString().contains(path)
-      })
-      case "" => None
-    }
-
-    println("-->" + controllerRoute)
-
-    controllerRoute match {
-      case None => swaggerResource
-      case Some(route) => {
+          println("path="+ path + ", rs=" + rs.path.toString());
+          val found = ("rest" + path + "/[^/]+$").r.pattern.matcher(rs.path.toString()).matches()
+//          val found = rs.path.toString().contains(path)
+          println("found=" + found)
+          found
+        }))
+      .fold(swaggerResource)(route => {
         val playReader: PlayReader = new PlayReader(null)
-        new SwaggerResource(Json.pretty(playReader.read(loadClass(route))), swaggerResource)
+        new SwaggerResource(Json.pretty(playReader.read(loadClass(route.get))), swaggerResource)
       }
-    }
+      )
+
+//        val controllerRoute = controllerResourceUrl.getOrElse("").replaceAll("\"", "") match {
+//          case path => swaggerPlugin.routes
+//            .filter(r => r.path.toString().startsWith("rest/"))
+//            .find(rs => {
+//              println("path=" + path + ", rs=" + rs.path.toString());
+//              rs.path.toString().contains(path)
+//            })
+//          case "" => None
+//        }
+//        controllerRoute match {
+//          case None => swaggerResource
+//          case Some(route) => {
+//            val playReader: PlayReader = new PlayReader(null)
+//            new SwaggerResource(Json.pretty(playReader.read(loadClass(route))), swaggerResource)
+//          }
+//        }
   }
 }

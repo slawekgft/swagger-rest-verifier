@@ -44,7 +44,7 @@ class ProjectClassLoader(val parent: ClassLoader, val jarFile: String) extends C
         case cnf: ClassNotFoundException => {
           val jar: JarFile = new JarFile(jarFile)
           Option(jar.getJarEntry(className + ".class"))
-            .flatMap(entry => Option(jar.getInputStream(entry)))
+            .map(entry => jar.getInputStream(entry))
             .flatMap(readAndDefineClass(_, name))
             .get
         }
